@@ -1,0 +1,18 @@
+# Default owners for everything in the repo
+* @kloia/document-anonymizer-maintainers
+
+# Core library
+/src/document_anonymizer/ @kloia/document-anonymizer-maintainers
+
+# Documentation
+/README.md @kloia/document-anonymizer-maintainers
+/CONTRIBUTING.md @kloia/document-anonymizer-maintainers
+/docs/ @kloia/document-anonymizer-maintainers
+
+# CI/CD and configuration
+/.github/ @kloia/document-anonymizer-maintainers
+/pyproject.toml @kloia/document-anonymizer-maintainers
+
+# Security-sensitive files
+/SECURITY.md @kloia/document-anonymizer-maintainers
+/.env.example @kloia/document-anonymizer-maintainers

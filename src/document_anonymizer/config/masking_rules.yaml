@@ -1,0 +1,50 @@
+anonymization:
+  secret_key: null
+  registry_path: 'logs/token_registry.json'
+  persist_registry: true
+
+ocr_settings:
+  dpi: 300
+  preprocessing:
+    enabled: true
+    use_ocr_preprocessor: true
+    # Preprocessing pipeline: 'full', 'minimal', or 'fast'
+    pipeline: 'full'
+    min_width: 1000
+    max_width: 3000
+
+detection_rules:
+  use_llm_classification: true
+  use_fallback_detection: true
+  min_confidence: 0.5
+
+masking_strategy:
+  text_fields:
+    background_color: [255, 255, 255]
+    text_color: [0, 0, 0]
+    padding: 5
+  font:
+    default_path: 'config/fonts/Arial.ttf'
+    default_size: 20
+    auto_scale: true
+
+verification:
+  enabled: true
+  strict_mode: false
+  check_original_text: true
+
+processing:
+  max_concurrent_pages: 8
+  max_concurrent_files: 4
+  streaming_threshold_pages: 20
+
+llm:
+  # Maximum retries for LLM API calls
+  max_retries: 3
+  # Timeout for LLM API calls (seconds)
+  timeout: 120
+  # Retry delay (seconds)
+  retry_delay: 2
+
+logging:
+  report_dir: 'logs/reports/'

@@ -1,0 +1,46 @@
+# Document Anonymizer Configuration Example
+# Copy to masking_rules.yaml and customize as needed
+
+# Anonymization settings
+anonymization:
+  secret_key: null  # Uses ANONYMIZATION_SECRET_KEY env var if not set
+  registry_path: null  # Auto-configured to output_dir/token_registry.json
+  persist_registry: true  # Save token mappings for consistency
+
+# OCR settings
+ocr_settings:
+  dpi: 300  # PDF rendering quality
+  preprocessing:
+    enabled: true
+    use_ocr_preprocessor: true  # Use ocr-preprocessor library if installed
+    pipeline: 'full'  # Options: minimal, fast, full
+
+# Detection settings
+detection_rules:
+  use_llm_classification: true  # Use Vision LLM if API key is configured
+  use_fallback_detection: true  # Always use pattern matching as backup
+  min_confidence: 0.60  # Minimum confidence for manual review
+  auto_mask_confidence: 0.85  # Auto-mask above this threshold
+
+# Masking strategies
+masking_strategy:
+  text_fields:
+    method: 'white_box_overlay'  # Options: white_box_overlay, background_aware
+    background_color: [255, 255, 255]  # RGB white
+    padding: 5  # Pixels around text
+  visual_fields:
+    stamp_method: 'opaque_gray_box'  # For signatures/stamps
+    gray_color: [200, 200, 200]  # RGB gray
+    blur_kernel_size: 51  # If using blur method
+
+# Post-masking verification
+verification:
+  enabled: true
+  strict_mode: false  # Fail on potential leakage
+  check_original_text: true  # OCR masked output to verify
+
+# Processing limits
+processing:
+  max_concurrent_pages: 8
+  max_concurrent_files: 4
+  streaming_threshold_pages: 20  # Stream processing for large documents
