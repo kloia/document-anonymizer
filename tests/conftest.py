@@ -86,15 +86,7 @@ def mock_llm_client() -> AsyncMock:
         return_value=MagicMock(
             status_code=200,
             json=MagicMock(
-                return_value={
-                    "choices": [
-                        {
-                            "message": {
-                                "content": '{"sensitive_fields": []}'
-                            }
-                        }
-                    ]
-                }
+                return_value={"choices": [{"message": {"content": '{"sensitive_fields": []}'}}]}
             ),
         )
     )

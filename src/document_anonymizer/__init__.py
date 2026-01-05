@@ -31,10 +31,8 @@ from .verification import PostMaskingVerifier, VerificationResult, VerificationS
 __all__ = [
     # Version
     "__version__",
-
     # Main class
     "DocumentAnonymizer",
-
     # Core components
     "AnonymizationEngine",
     "create_anonymization_engine",
@@ -43,18 +41,15 @@ __all__ = [
     "FieldDetector",
     "ImageMasker",
     "TextRenderer",
-
     # PDF handling
     "pdf_to_images",
     "images_to_pdf",
     "get_pdf_info",
-
     # Reporting and verification
     "ReportGenerator",
     "PostMaskingVerifier",
     "VerificationStatus",
     "VerificationResult",
-
     # Constants and enums
     "EntityNamespace",
     "DocumentType",

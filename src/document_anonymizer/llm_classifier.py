@@ -15,7 +15,6 @@ import cv2
 import httpx
 import numpy as np
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -36,27 +35,20 @@ class LLMDetector:
             config: Configuration dictionary containing LLM settings
         """
         self.config = config or {}
-        llm_config = self.config.get('llm', {})
+        llm_config = self.config.get("llm", {})
 
         # API settings: config > env var > default
         # This allows both programmatic configuration and environment variables
-        self.api_url = (
-            llm_config.get('api_url')
-            or os.getenv('LLM_API_URL', '')
-        )
-        self.api_key = (
-            llm_config.get('api_key')
-            or os.getenv('LLM_API_KEY', '')
-        )
-        self.model = (
-            llm_config.get('model')
-            or os.getenv('LLM_MODEL_VISION', 'gpt-4-vision-preview')
+        self.api_url = llm_config.get("api_url") or os.getenv("LLM_API_URL", "")
+        self.api_key = llm_config.get("api_key") or os.getenv("LLM_API_KEY", "")
+        self.model = llm_config.get("model") or os.getenv(
+            "LLM_MODEL_VISION", "gpt-4-vision-preview"
         )
 
         # Retry settings
-        self.max_retries = llm_config.get('max_retries', 3)
-        self.timeout = llm_config.get('timeout', 120)
-        self.retry_delay = llm_config.get('retry_delay', 2)
+        self.max_retries = llm_config.get("max_retries", 3)
+        self.timeout = llm_config.get("timeout", 120)
+        self.retry_delay = llm_config.get("retry_delay", 2)
 
         # Load prompt
         self._prompt = self._load_prompt()
@@ -68,9 +60,9 @@ class LLMDetector:
 
     def _load_prompt(self) -> str:
         """Load the sensitive field detector prompt."""
-        prompt_path = Path(__file__).parent / 'prompts' / 'sensitive_field_detector.md'
+        prompt_path = Path(__file__).parent / "prompts" / "sensitive_field_detector.md"
         if prompt_path.exists():
-            with open(prompt_path, 'r', encoding='utf-8') as f:
+            with open(prompt_path, "r", encoding="utf-8") as f:
                 return f.read()
         logger.warning("Prompt file not found: sensitive_field_detector.md")
         return ""
@@ -80,18 +72,18 @@ class LLMDetector:
         if self._client is None:
             self._client = httpx.AsyncClient(
                 timeout=httpx.Timeout(self.timeout),
-                limits=httpx.Limits(max_keepalive_connections=10)
+                limits=httpx.Limits(max_keepalive_connections=10),
             )
         return self._client
 
     def _encode_image(self, image: np.ndarray) -> str:
         """Encode image to base64."""
-        _, buffer = cv2.imencode('.jpg', image, [cv2.IMWRITE_JPEG_QUALITY, 85])
-        return base64.b64encode(buffer).decode('utf-8')
+        _, buffer = cv2.imencode(".jpg", image, [cv2.IMWRITE_JPEG_QUALITY, 85])
+        return base64.b64encode(buffer).decode("utf-8")
 
     async def detect_document_language(self, image: np.ndarray) -> Dict:
         """Detect document language. Returns {'languages': [...], 'locale': '...'}."""
-        default_result = {'languages': ['en'], 'locale': 'en_US'}
+        default_result = {"languages": ["en"], "locale": "en_US"}
 
         if not self.api_key:
             logger.warning("No LLM API key configured, using defaults")
@@ -122,18 +114,18 @@ Return only the JSON object, nothing else."""
             import re
 
             # Extract JSON object
-            match = re.search(r'\{[\s\S]*?\}', response)
+            match = re.search(r"\{[\s\S]*?\}", response)
             if match:
                 result = json.loads(match.group())
-                languages = result.get('languages', ['en'])
-                locale = result.get('locale', 'en_US')
+                languages = result.get("languages", ["en"])
+                locale = result.get("locale", "en_US")
 
                 # Ensure 'en' is always included in languages
-                if 'en' not in languages:
-                    languages.insert(0, 'en')
+                if "en" not in languages:
+                    languages.insert(0, "en")
 
                 logger.info(f"LLM detected languages: {languages}, locale: {locale}")
-                return {'languages': languages, 'locale': locale}
+                return {"languages": languages, "locale": locale}
 
             logger.warning(f"Could not parse language response: {response}")
             return default_result
@@ -142,13 +134,9 @@ Return only the JSON object, nothing else."""
             logger.error(f"Language detection error: {e}")
             return default_result
 
-    async def detect_all(
-        self,
-        image: np.ndarray,
-        ocr_results: Optional[List[Dict]] = None
-    ) -> Dict:
+    async def detect_all(self, image: np.ndarray, ocr_results: Optional[List[Dict]] = None) -> Dict:
         """Unified detection of text and visual sensitive elements."""
-        empty_result = {'text_detections': [], 'visual_detections': []}
+        empty_result = {"text_detections": [], "visual_detections": []}
 
         if not self.api_key:
             logger.warning("No LLM API key configured")
@@ -165,15 +153,16 @@ Return only the JSON object, nothing else."""
             # Add OCR blocks
             if ocr_results:
                 import json
+
                 ocr_blocks = [
                     {
-                        "block_id": block.get('block_id', f"block_{i}"),
-                        "text": block.get('text', ''),
+                        "block_id": block.get("block_id", f"block_{i}"),
+                        "text": block.get("text", ""),
                         "bbox": {
-                            "x1": block.get('bbox', [0, 0, 0, 0])[0],
-                            "y1": block.get('bbox', [0, 0, 0, 0])[1],
-                            "x2": block.get('bbox', [0, 0, 0, 0])[2],
-                            "y2": block.get('bbox', [0, 0, 0, 0])[3],
+                            "x1": block.get("bbox", [0, 0, 0, 0])[0],
+                            "y1": block.get("bbox", [0, 0, 0, 0])[1],
+                            "x2": block.get("bbox", [0, 0, 0, 0])[2],
+                            "y2": block.get("bbox", [0, 0, 0, 0])[3],
                         },
                     }
                     for i, block in enumerate(ocr_results[:100])
@@ -188,16 +177,12 @@ Return only the JSON object, nothing else."""
             logger.error(f"Unified detection error: {e}")
             return empty_result
 
-    def _parse_unified_response(
-        self,
-        response: str,
-        ocr_results: List[Dict]
-    ) -> Dict:
+    def _parse_unified_response(self, response: str, ocr_results: List[Dict]) -> Dict:
         """Parse unified detector LLM response."""
         import json
         import re
 
-        result = {'text_detections': [], 'visual_detections': []}
+        result = {"text_detections": [], "visual_detections": []}
 
         try:
             # Extract JSON object
@@ -210,51 +195,53 @@ Return only the JSON object, nothing else."""
                 data = json.loads(json_match.group())
 
                 # Create OCR lookup for bbox retrieval
-                ocr_lookup = {b.get('block_id'): b for b in ocr_results}
+                ocr_lookup = {b.get("block_id"): b for b in ocr_results}
 
                 # Parse text detections
-                for td in data.get('text_detections', []):
-                    block_id = td.get('block_id', '')
+                for td in data.get("text_detections", []):
+                    block_id = td.get("block_id", "")
                     ocr_block = ocr_lookup.get(block_id, {})
 
                     detection = {
-                        'block_id': block_id,
-                        'full_text': td.get('full_text', ''),
-                        'label': td.get('label'),  # Can be None
-                        'sensitive_value': td.get('sensitive_value', ''),
-                        'field_type': td.get('category', 'unknown'),
-                        'confidence': td.get('confidence', 0.5),
-                        'risk_level': td.get('risk_level', 'MEDIUM'),
-                        'reasoning': td.get('reasoning', ''),
-                        'bbox': ocr_block.get('bbox'),
-                        'font_properties': ocr_block.get('font_properties', {}),
-                        'detection_method': 'llm_unified',
+                        "block_id": block_id,
+                        "full_text": td.get("full_text", ""),
+                        "label": td.get("label"),  # Can be None
+                        "sensitive_value": td.get("sensitive_value", ""),
+                        "field_type": td.get("category", "unknown"),
+                        "confidence": td.get("confidence", 0.5),
+                        "risk_level": td.get("risk_level", "MEDIUM"),
+                        "reasoning": td.get("reasoning", ""),
+                        "bbox": ocr_block.get("bbox"),
+                        "font_properties": ocr_block.get("font_properties", {}),
+                        "detection_method": "llm_unified",
                     }
-                    result['text_detections'].append(detection)
+                    result["text_detections"].append(detection)
 
                 # Parse visual detections
-                for vd in data.get('visual_detections', []):
-                    bbox_data = vd.get('bbox', {})
+                for vd in data.get("visual_detections", []):
+                    bbox_data = vd.get("bbox", {})
                     if isinstance(bbox_data, dict):
                         bbox = [
-                            bbox_data.get('x1', 0),
-                            bbox_data.get('y1', 0),
-                            bbox_data.get('x2', 0),
-                            bbox_data.get('y2', 0),
+                            bbox_data.get("x1", 0),
+                            bbox_data.get("y1", 0),
+                            bbox_data.get("x2", 0),
+                            bbox_data.get("y2", 0),
                         ]
                     else:
                         bbox = bbox_data if bbox_data else [0, 0, 0, 0]
 
                     detection = {
-                        'element_id': vd.get('element_id', f"visual_{len(result['visual_detections'])}"),
-                        'field_type': vd.get('type', 'signature').lower(),
-                        'bbox': bbox,
-                        'confidence': vd.get('confidence', 0.8),
-                        'description': vd.get('description', ''),
-                        'is_visual': True,
-                        'detection_method': 'llm_unified_visual',
+                        "element_id": vd.get(
+                            "element_id", f"visual_{len(result['visual_detections'])}"
+                        ),
+                        "field_type": vd.get("type", "signature").lower(),
+                        "bbox": bbox,
+                        "confidence": vd.get("confidence", 0.8),
+                        "description": vd.get("description", ""),
+                        "is_visual": True,
+                        "detection_method": "llm_unified_visual",
                     }
-                    result['visual_detections'].append(detection)
+                    result["visual_detections"].append(detection)
 
                 logger.info(
                     f"Unified detection: {len(result['text_detections'])} text, "
@@ -279,10 +266,7 @@ Return only the JSON object, nothing else."""
         """
         client = await self._get_client()
 
-        headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json"
-        }
+        headers = {"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"}
 
         payload = {
             "model": self.model,
@@ -292,15 +276,10 @@ Return only the JSON object, nothing else."""
                     "content": [
                         {
                             "type": "image_url",
-                            "image_url": {
-                                "url": f"data:image/jpeg;base64,{image_b64}"
-                            }
+                            "image_url": {"url": f"data:image/jpeg;base64,{image_b64}"},
                         },
-                        {
-                            "type": "text",
-                            "text": prompt
-                        }
-                    ]
+                        {"type": "text", "text": prompt},
+                    ],
                 }
             ],
             "max_tokens": 4096,
@@ -310,14 +289,12 @@ Return only the JSON object, nothing else."""
         for attempt in range(self.max_retries):
             try:
                 response = await client.post(
-                    f"{self.api_url}/v1/chat/completions",
-                    headers=headers,
-                    json=payload
+                    f"{self.api_url}/v1/chat/completions", headers=headers, json=payload
                 )
                 response.raise_for_status()
 
                 result = response.json()
-                return result['choices'][0]['message']['content']
+                return result["choices"][0]["message"]["content"]
 
             except httpx.HTTPStatusError as e:
                 logger.warning(f"LLM API error (attempt {attempt + 1}): {e}")

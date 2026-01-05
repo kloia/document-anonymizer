@@ -24,13 +24,13 @@ def analyze_pattern(text: str) -> List[Tuple[str, int]]:
 
     for char in text:
         if char.isdigit():
-            char_type = 'D'
+            char_type = "D"
         elif char.isalpha():
-            char_type = 'L'
-        elif char in ' -_./:()+':
-            char_type = 'S'  # Treat as separator (preserved as-is)
+            char_type = "L"
+        elif char in " -_./:()+":
+            char_type = "S"  # Treat as separator (preserved as-is)
         else:
-            char_type = 'X'
+            char_type = "X"
 
         if char_type == current_type:
             current_len += 1
@@ -63,13 +63,15 @@ def generate_from_pattern(pattern: List[Tuple[str, int]], original: str, seed: i
     orig_idx = 0
 
     for seg_type, seg_len in pattern:
-        if seg_type == 'D':
+        if seg_type == "D":
             # Generate digits
-            result.append(''.join([str(random.randint(0, 9)) for _ in range(seg_len)]))
+            result.append("".join([str(random.randint(0, 9)) for _ in range(seg_len)]))
             orig_idx += seg_len
-        elif seg_type == 'L':
+        elif seg_type == "L":
             # Generate letters (preserve case from original)
-            orig_segment = original[orig_idx:orig_idx + seg_len] if orig_idx < len(original) else ''
+            orig_segment = (
+                original[orig_idx : orig_idx + seg_len] if orig_idx < len(original) else ""
+            )
             letters = []
             for i in range(seg_len):
                 letter = random.choice(string.ascii_uppercase)
@@ -77,19 +79,25 @@ def generate_from_pattern(pattern: List[Tuple[str, int]], original: str, seed: i
                 if i < len(orig_segment) and orig_segment[i].islower():
                     letter = letter.lower()
                 letters.append(letter)
-            result.append(''.join(letters))
+            result.append("".join(letters))
             orig_idx += seg_len
-        elif seg_type == 'S':
+        elif seg_type == "S":
             # Preserve original separator
-            sep = original[orig_idx:orig_idx + seg_len] if orig_idx < len(original) else ' ' * seg_len
+            sep = (
+                original[orig_idx : orig_idx + seg_len]
+                if orig_idx < len(original)
+                else " " * seg_len
+            )
             result.append(sep)
             orig_idx += seg_len
         else:
             # Mixed - generate alphanumeric
-            result.append(''.join(random.choices(string.ascii_uppercase + string.digits, k=seg_len)))
+            result.append(
+                "".join(random.choices(string.ascii_uppercase + string.digits, k=seg_len))
+            )
             orig_idx += seg_len
 
-    return ''.join(result)
+    return "".join(result)
 
 
 class DummyDataGenerator:
@@ -97,30 +105,75 @@ class DummyDataGenerator:
 
     # Common name components for generating neutral names
     FIRST_NAMES = [
-        'Alex', 'Sam', 'Jordan', 'Taylor', 'Morgan', 'Casey', 'Riley', 'Quinn',
-        'Avery', 'Parker', 'Cameron', 'Drew', 'Blake', 'Logan', 'Ryan', 'Jamie'
+        "Alex",
+        "Sam",
+        "Jordan",
+        "Taylor",
+        "Morgan",
+        "Casey",
+        "Riley",
+        "Quinn",
+        "Avery",
+        "Parker",
+        "Cameron",
+        "Drew",
+        "Blake",
+        "Logan",
+        "Ryan",
+        "Jamie",
     ]
     LAST_NAMES = [
-        'Smith', 'Johnson', 'Brown', 'Davis', 'Wilson', 'Moore', 'Taylor', 'Anderson',
-        'Thomas', 'Jackson', 'White', 'Harris', 'Martin', 'Garcia', 'Miller', 'Jones'
+        "Smith",
+        "Johnson",
+        "Brown",
+        "Davis",
+        "Wilson",
+        "Moore",
+        "Taylor",
+        "Anderson",
+        "Thomas",
+        "Jackson",
+        "White",
+        "Harris",
+        "Martin",
+        "Garcia",
+        "Miller",
+        "Jones",
     ]
 
     # Common legal suffixes for companies (international)
     LEGAL_SUFFIXES = [
-        'Ltd', 'Ltd.', 'LLC', 'Inc', 'Inc.', 'Corp', 'Corp.', 'GmbH', 'AG',
-        'A.Ş.', 'A.S.', 'Ş.T.İ.', 'S.A.', 'S.L.', 'B.V.', 'N.V.', 'Pty',
-        'PLC', 'LLP', 'Co.', 'Co', '& Co', '& Co.', 'Limited', 'Corporation'
+        "Ltd",
+        "Ltd.",
+        "LLC",
+        "Inc",
+        "Inc.",
+        "Corp",
+        "Corp.",
+        "GmbH",
+        "AG",
+        "A.Ş.",
+        "A.S.",
+        "Ş.T.İ.",
+        "S.A.",
+        "S.L.",
+        "B.V.",
+        "N.V.",
+        "Pty",
+        "PLC",
+        "LLP",
+        "Co.",
+        "Co",
+        "& Co",
+        "& Co.",
+        "Limited",
+        "Corporation",
     ]
 
-    def __init__(
-        self,
-        secret_key: Optional[str] = None,
-        locale: str = 'en_US'
-    ):
+    def __init__(self, secret_key: Optional[str] = None, locale: str = "en_US"):
         """Initialize generator with optional secret key and locale."""
         self.secret_key = secret_key or os.getenv(
-            "ANONYMIZATION_SECRET_KEY",
-            "document_anonymizer_default_key"
+            "ANONYMIZATION_SECRET_KEY", "document_anonymizer_default_key"
         )
         self.locale = locale
 
@@ -129,29 +182,29 @@ class DummyDataGenerator:
 
         # Field type to generator mapping
         self._generators = {
-            'person_name': self._generate_name,
-            'full_name': self._generate_name,
-            'name': self._generate_name,
-            'company_name': self._generate_company,
-            'organization': self._generate_company,
-            'phone': self._generate_phone,
-            'email': self._generate_email,
-            'address': self._generate_address,
-            'street_address': self._generate_address,
-            'tax_id': self._generate_tax_id,
-            'national_id': self._generate_national_id,
-            'passport': self._generate_passport,
-            'passport_number': self._generate_passport,
-            'license_plate': self._generate_license_plate,
-            'vehicle_plate': self._generate_license_plate,
-            'date_of_birth': self._generate_date,
-            'dob': self._generate_date,
-            'date': self._generate_date,
-            'reference': self._generate_reference,
-            'reference_number': self._generate_reference,
-            'invoice_number': self._generate_invoice,
-            'signature': self._generate_signature_placeholder,
-            'stamp': self._generate_stamp_placeholder,
+            "person_name": self._generate_name,
+            "full_name": self._generate_name,
+            "name": self._generate_name,
+            "company_name": self._generate_company,
+            "organization": self._generate_company,
+            "phone": self._generate_phone,
+            "email": self._generate_email,
+            "address": self._generate_address,
+            "street_address": self._generate_address,
+            "tax_id": self._generate_tax_id,
+            "national_id": self._generate_national_id,
+            "passport": self._generate_passport,
+            "passport_number": self._generate_passport,
+            "license_plate": self._generate_license_plate,
+            "vehicle_plate": self._generate_license_plate,
+            "date_of_birth": self._generate_date,
+            "dob": self._generate_date,
+            "date": self._generate_date,
+            "reference": self._generate_reference,
+            "reference_number": self._generate_reference,
+            "invoice_number": self._generate_invoice,
+            "signature": self._generate_signature_placeholder,
+            "stamp": self._generate_stamp_placeholder,
         }
 
         logger.debug(f"DummyDataGenerator initialized (locale: {locale})")
@@ -167,12 +220,7 @@ class DummyDataGenerator:
             logger.info(f"Updating DummyDataGenerator locale: {self.locale} → {locale}")
             self.locale = locale
 
-    def generate(
-        self,
-        original_text: str,
-        field_type: str,
-        context: Optional[str] = None
-    ) -> str:
+    def generate(self, original_text: str, field_type: str, context: Optional[str] = None) -> str:
         """
         Generate dummy data for a field.
 
@@ -198,10 +246,7 @@ class DummyDataGenerator:
         seed = self._generate_seed(original_text)
 
         # Get generator for field type
-        generator = self._generators.get(
-            field_type.lower(),
-            self._generate_generic
-        )
+        generator = self._generators.get(field_type.lower(), self._generate_generic)
 
         # Generate dummy
         dummy = generator(seed, original_text)
@@ -214,7 +259,7 @@ class DummyDataGenerator:
     def _generate_seed(self, text: str) -> int:
         """Generate consistent seed from text."""
         message = f"{self.secret_key}:{text.lower().strip()}"
-        hash_hex = hashlib.sha256(message.encode('utf-8')).hexdigest()[:8]
+        hash_hex = hashlib.sha256(message.encode("utf-8")).hexdigest()[:8]
         return int(hash_hex, 16)
 
     def _get_faker(self, seed: int) -> Faker:
@@ -247,7 +292,7 @@ class DummyDataGenerator:
             for _ in range(word_count - 2):
                 parts.append(random.choice(self.FIRST_NAMES))
             parts.append(random.choice(self.LAST_NAMES))
-            return ' '.join(parts)
+            return " ".join(parts)
 
     def _generate_company(self, seed: int, original: str) -> str:
         """Generate company name preserving legal suffix."""
@@ -260,18 +305,40 @@ class DummyDataGenerator:
         for suffix in sorted(self.LEGAL_SUFFIXES, key=len, reverse=True):
             if original_stripped.endswith(suffix):
                 found_suffix = suffix
-                original_stripped = original_stripped[:-len(suffix)].strip()
+                original_stripped = original_stripped[: -len(suffix)].strip()
                 break
 
         # Generate company name parts
         company_words = [
-            'Global', 'United', 'National', 'Premier', 'Alpha', 'Delta',
-            'Pacific', 'Atlantic', 'Northern', 'Southern', 'Central',
-            'Metro', 'Capital', 'Crown', 'Royal', 'Summit', 'Peak'
+            "Global",
+            "United",
+            "National",
+            "Premier",
+            "Alpha",
+            "Delta",
+            "Pacific",
+            "Atlantic",
+            "Northern",
+            "Southern",
+            "Central",
+            "Metro",
+            "Capital",
+            "Crown",
+            "Royal",
+            "Summit",
+            "Peak",
         ]
         company_types = [
-            'Industries', 'Solutions', 'Services', 'Systems', 'Group',
-            'Holdings', 'Partners', 'Associates', 'Enterprises', 'Trading'
+            "Industries",
+            "Solutions",
+            "Services",
+            "Systems",
+            "Group",
+            "Holdings",
+            "Partners",
+            "Associates",
+            "Enterprises",
+            "Trading",
         ]
 
         # Match approximate word count
@@ -298,28 +365,28 @@ class DummyDataGenerator:
             return generate_from_pattern(pattern, original, seed)
         else:
             # Fallback: match length
-            clean = re.sub(r'[^0-9]', '', original)
+            clean = re.sub(r"[^0-9]", "", original)
             length = len(clean) if len(clean) >= 7 else 10
-            return ''.join([str(random.randint(0, 9)) for _ in range(length)])
+            return "".join([str(random.randint(0, 9)) for _ in range(length)])
 
     def _generate_email(self, seed: int, original: str) -> str:
         """Generate email address preserving domain structure."""
         random.seed(seed)
 
         # Parse original email
-        if '@' not in original:
+        if "@" not in original:
             # Not a valid email, return generic
             return f"user{random.randint(100, 999)}@example.com"
 
-        local_part, domain = original.rsplit('@', 1)
+        local_part, domain = original.rsplit("@", 1)
 
         # Generate new local part matching length
         new_local_length = max(len(local_part), 5)
         chars = string.ascii_lowercase + string.digits
-        new_local = ''.join(random.choices(chars, k=new_local_length))
+        new_local = "".join(random.choices(chars, k=new_local_length))
 
         # Preserve domain structure but anonymize
-        domain_parts = domain.split('.')
+        domain_parts = domain.split(".")
         if len(domain_parts) >= 2:
             # Keep TLD, anonymize rest
             tld = domain_parts[-1]
@@ -334,16 +401,25 @@ class DummyDataGenerator:
         random.seed(seed)
 
         # Generic address components
-        streets = ['Main St', 'Oak Ave', 'Park Rd', 'Cedar Ln', 'Elm St', 'Lake Dr', 'Hill Rd', 'River Rd']
-        cities = ['Springfield', 'Franklin', 'Clinton', 'Madison', 'Georgetown', 'Bristol', 'Salem']
+        streets = [
+            "Main St",
+            "Oak Ave",
+            "Park Rd",
+            "Cedar Ln",
+            "Elm St",
+            "Lake Dr",
+            "Hill Rd",
+            "River Rd",
+        ]
+        cities = ["Springfield", "Franklin", "Clinton", "Madison", "Georgetown", "Bristol", "Salem"]
 
         # Analyze original structure
-        has_number = bool(re.search(r'\d', original))
-        line_count = len(original.split('\n')) if '\n' in original else 1
-        comma_count = original.count(',')
+        has_number = bool(re.search(r"\d", original))
+        line_count = len(original.split("\n")) if "\n" in original else 1
+        comma_count = original.count(",")
 
         # Build address matching structure
-        number = str(random.randint(1, 999)) if has_number else ''
+        number = str(random.randint(1, 999)) if has_number else ""
         street = random.choice(streets)
         city = random.choice(cities)
 
@@ -373,9 +449,9 @@ class DummyDataGenerator:
             return generate_from_pattern(pattern, original, seed)
         else:
             # Match original length
-            clean = re.sub(r'[^0-9]', '', original)
+            clean = re.sub(r"[^0-9]", "", original)
             length = len(clean) if len(clean) >= 5 else 10
-            return ''.join([str(random.randint(0, 9)) for _ in range(length)])
+            return "".join([str(random.randint(0, 9)) for _ in range(length)])
 
     def _generate_national_id(self, seed: int, original: str) -> str:
         """Generate national ID preserving format."""
@@ -389,11 +465,11 @@ class DummyDataGenerator:
             return generate_from_pattern(pattern, original, seed)
         else:
             # Fallback: match length, first digit non-zero
-            clean = re.sub(r'[^0-9]', '', original)
+            clean = re.sub(r"[^0-9]", "", original)
             length = len(clean) if len(clean) >= 5 else 11
 
             first = str(random.randint(1, 9))
-            rest = ''.join([str(random.randint(0, 9)) for _ in range(length - 1)])
+            rest = "".join([str(random.randint(0, 9)) for _ in range(length - 1)])
 
             return f"{first}{rest}"
 
@@ -410,7 +486,7 @@ class DummyDataGenerator:
         else:
             # Fallback: letter prefix + digits
             prefix = random.choice(string.ascii_uppercase)
-            number = ''.join([str(random.randint(0, 9)) for _ in range(8)])
+            number = "".join([str(random.randint(0, 9)) for _ in range(8)])
             return f"{prefix}{number}"
 
     def _generate_license_plate(self, seed: int, original: str) -> str:
@@ -425,8 +501,8 @@ class DummyDataGenerator:
             return generate_from_pattern(pattern, original, seed)
         else:
             # Fallback: generic plate format
-            letters = ''.join(random.choices(string.ascii_uppercase, k=3))
-            numbers = ''.join([str(random.randint(0, 9)) for _ in range(4)])
+            letters = "".join(random.choices(string.ascii_uppercase, k=3))
+            numbers = "".join([str(random.randint(0, 9)) for _ in range(4)])
             return f"{letters} {numbers}"
 
     def _generate_date(self, seed: int, original: str) -> str:
@@ -435,27 +511,27 @@ class DummyDataGenerator:
         date = fake.date_of_birth(minimum_age=18, maximum_age=80)
 
         # Detect format from original
-        if '/' in original:
-            return date.strftime('%d/%m/%Y')
-        elif '.' in original:
-            return date.strftime('%d.%m.%Y')
-        elif '-' in original:
-            return date.strftime('%Y-%m-%d')
+        if "/" in original:
+            return date.strftime("%d/%m/%Y")
+        elif "." in original:
+            return date.strftime("%d.%m.%Y")
+        elif "-" in original:
+            return date.strftime("%Y-%m-%d")
         else:
-            return date.strftime('%d.%m.%Y')
+            return date.strftime("%d.%m.%Y")
 
     def _generate_reference(self, seed: int, original: str) -> str:
         """Generate reference number."""
         random.seed(seed)
 
         # Match original length
-        length = len(original.replace(' ', '').replace('-', ''))
+        length = len(original.replace(" ", "").replace("-", ""))
         if length < 6:
             length = 8
 
         # Mix of letters and numbers
         chars = string.ascii_uppercase + string.digits
-        return ''.join(random.choices(chars, k=length))
+        return "".join(random.choices(chars, k=length))
 
     def _generate_invoice(self, seed: int, original: str) -> str:
         """Generate invoice number preserving format."""
@@ -470,7 +546,7 @@ class DummyDataGenerator:
             # Generic invoice format matching length
             length = len(original) if len(original) >= 6 else 10
             chars = string.ascii_uppercase + string.digits
-            return ''.join(random.choices(chars, k=length))
+            return "".join(random.choices(chars, k=length))
 
     def _generate_signature_placeholder(self, seed: int, original: str) -> str:
         """Generate placeholder for signature."""
@@ -488,10 +564,10 @@ class DummyDataGenerator:
         length = len(original)
 
         if original.isdigit():
-            return ''.join([str(random.randint(0, 9)) for _ in range(length)])
+            return "".join([str(random.randint(0, 9)) for _ in range(length)])
         elif original.isalpha():
-            return ''.join(random.choices(string.ascii_uppercase, k=length))
+            return "".join(random.choices(string.ascii_uppercase, k=length))
         else:
             # Mix
             chars = string.ascii_uppercase + string.digits
-            return ''.join(random.choices(chars, k=length))
+            return "".join(random.choices(chars, k=length))

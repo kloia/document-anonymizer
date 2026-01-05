@@ -74,8 +74,7 @@ def pdf_to_images(pdf_path: str, dpi: int = 300) -> List[np.ndarray]:
     return images
 
 
-def images_to_pdf(images: List[np.ndarray], output_path: str,
-                  compression: bool = True) -> bool:
+def images_to_pdf(images: List[np.ndarray], output_path: str, compression: bool = True) -> bool:
     """
     Convert list of images to PDF file.
 
@@ -107,9 +106,9 @@ def images_to_pdf(images: List[np.ndarray], output_path: str,
             img_bytes = io.BytesIO()
 
             if compression:
-                pil_img.save(img_bytes, format='JPEG', quality=95)
+                pil_img.save(img_bytes, format="JPEG", quality=95)
             else:
-                pil_img.save(img_bytes, format='PNG')
+                pil_img.save(img_bytes, format="PNG")
 
             img_bytes.seek(0)
 

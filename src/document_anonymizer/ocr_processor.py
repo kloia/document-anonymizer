@@ -12,6 +12,7 @@ import numpy as np
 # Import ocr-preprocessor for enhanced preprocessing
 try:
     from ocr_preprocessor import OCRPreprocessor, Pipeline
+
     HAS_OCR_PREPROCESSOR = True
 except ImportError:
     HAS_OCR_PREPROCESSOR = False
@@ -31,29 +32,29 @@ class OCRProcessor:
         self,
         config: Optional[Dict] = None,
         max_workers: int = 4,
-        languages: Optional[List[str]] = None
+        languages: Optional[List[str]] = None,
     ):
         """Initialize OCR processor."""
         self.config = config or {}
         self.max_workers = max_workers
 
         # OCR settings
-        ocr_settings = self.config.get('ocr_settings', {})
-        preprocessing = ocr_settings.get('preprocessing', {})
-        self.preprocessing_enabled = preprocessing.get('enabled', True)
-        self.use_ocr_preprocessor = preprocessing.get('use_ocr_preprocessor', True)
-        self.preprocessing_pipeline = preprocessing.get('pipeline', 'full')
+        ocr_settings = self.config.get("ocr_settings", {})
+        preprocessing = ocr_settings.get("preprocessing", {})
+        self.preprocessing_enabled = preprocessing.get("enabled", True)
+        self.use_ocr_preprocessor = preprocessing.get("use_ocr_preprocessor", True)
+        self.preprocessing_pipeline = preprocessing.get("pipeline", "full")
 
         # Language settings - from config, parameter, or auto-detect later
-        config_languages = ocr_settings.get('languages')
-        self.languages = config_languages or languages or ['en']
+        config_languages = ocr_settings.get("languages")
+        self.languages = config_languages or languages or ["en"]
 
         # Initialize ocr-preprocessor if available
         self._preprocessor: Optional[OCRPreprocessor] = None
         if HAS_OCR_PREPROCESSOR and self.use_ocr_preprocessor:
             self._preprocessor = OCRPreprocessor(
-                min_width=preprocessing.get('min_width', 1000),
-                max_width=preprocessing.get('max_width', 3000)
+                min_width=preprocessing.get("min_width", 1000),
+                max_width=preprocessing.get("max_width", 3000),
             )
             logger.debug("OCR Preprocessor initialized")
         elif self.use_ocr_preprocessor:
@@ -62,8 +63,7 @@ class OCRProcessor:
         # Initialize thread pool if not exists
         if OCRProcessor._executor is None:
             OCRProcessor._executor = ThreadPoolExecutor(
-                max_workers=max_workers,
-                thread_name_prefix='ocr_worker'
+                max_workers=max_workers, thread_name_prefix="ocr_worker"
             )
 
         self.executor = OCRProcessor._executor
@@ -71,15 +71,11 @@ class OCRProcessor:
 
     def _get_reader(self, languages: List[str]) -> easyocr.Reader:
         """Get or create cached EasyOCR reader for given languages."""
-        cache_key = ','.join(sorted(languages))
+        cache_key = ",".join(sorted(languages))
 
         if cache_key not in OCRProcessor._readers:
             logger.info(f"Initializing EasyOCR with languages: {languages}")
-            OCRProcessor._readers[cache_key] = easyocr.Reader(
-                languages,
-                gpu=True,
-                verbose=False
-            )
+            OCRProcessor._readers[cache_key] = easyocr.Reader(languages, gpu=True, verbose=False)
 
         return OCRProcessor._readers[cache_key]
 
@@ -110,22 +106,19 @@ class OCRProcessor:
 
         try:
             # Convert OpenCV BGR to bytes
-            _, img_bytes = cv2.imencode('.png', image)
+            _, img_bytes = cv2.imencode(".png", image)
             img_bytes = img_bytes.tobytes()
 
             # Get pipeline
-            if self.preprocessing_pipeline == 'minimal':
+            if self.preprocessing_pipeline == "minimal":
                 pipeline = Pipeline.MINIMAL
-            elif self.preprocessing_pipeline == 'fast':
+            elif self.preprocessing_pipeline == "fast":
                 pipeline = Pipeline.FAST
             else:
                 pipeline = Pipeline.FULL
 
             # Process image
-            processed_bytes = self._preprocessor.process_image(
-                img_bytes,
-                pipeline=pipeline
-            )
+            processed_bytes = self._preprocessor.process_image(img_bytes, pipeline=pipeline)
 
             # Convert back to OpenCV format
             nparr = np.frombuffer(processed_bytes, np.uint8)
@@ -162,8 +155,7 @@ class OCRProcessor:
 
         # Detect lines using Hough Transform
         lines = cv2.HoughLinesP(
-            edges, 1, np.pi / 180, threshold=100,
-            minLineLength=100, maxLineGap=10
+            edges, 1, np.pi / 180, threshold=100, minLineLength=100, maxLineGap=10
         )
 
         if lines is None or len(lines) == 0:
@@ -207,10 +199,12 @@ class OCRProcessor:
 
         # Apply rotation
         rotated = cv2.warpAffine(
-            image, rotation_matrix, (new_w, new_h),
+            image,
+            rotation_matrix,
+            (new_w, new_h),
             flags=cv2.INTER_CUBIC,
             borderMode=cv2.BORDER_CONSTANT,
-            borderValue=(255, 255, 255) if len(image.shape) == 3 else 255
+            borderValue=(255, 255, 255) if len(image.shape) == 3 else 255,
         )
 
         logger.debug(f"Image deskewed by {median_angle:.2f} degrees")
@@ -248,12 +242,7 @@ class OCRProcessor:
 
         return result
 
-    def _analyze_font_properties(
-        self,
-        image: np.ndarray,
-        bbox: List[int],
-        text: str
-    ) -> Dict:
+    def _analyze_font_properties(self, image: np.ndarray, bbox: List[int], text: str) -> Dict:
         """
         Analyze font properties from text region.
 
@@ -293,40 +282,39 @@ class OCRProcessor:
         # Character spacing
         if len(text) > 1 and text_height > 0:
             char_width = (x2 - x1) / len(text)
-            char_spacing = 'normal' if char_width < text_height * 0.7 else 'wide'
+            char_spacing = "normal" if char_width < text_height * 0.7 else "wide"
         else:
-            char_spacing = 'normal'
+            char_spacing = "normal"
 
         # Get surrounding background
         surrounding_bg = self._get_surrounding_background(image, bbox)
 
         return {
-            'estimated_size': max(8, min(estimated_font_size, 72)),
-            'text_color': text_color,
-            'background_color': bg_color,
-            'surrounding_background': surrounding_bg,
-            'is_bold': is_bold,
-            'char_spacing': char_spacing,
-            'text_height': text_height,
-            'text_width': x2 - x1,
+            "estimated_size": max(8, min(estimated_font_size, 72)),
+            "text_color": text_color,
+            "background_color": bg_color,
+            "surrounding_background": surrounding_bg,
+            "is_bold": is_bold,
+            "char_spacing": char_spacing,
+            "text_height": text_height,
+            "text_width": x2 - x1,
         }
 
     def _default_font_properties(self, height: int) -> Dict:
         """Return default font properties."""
         return {
-            'estimated_size': max(8, int(height * 0.85)),
-            'text_color': (0, 0, 0),
-            'background_color': (255, 255, 255),
-            'surrounding_background': (255, 255, 255),
-            'is_bold': False,
-            'char_spacing': 'normal',
-            'text_height': height,
-            'text_width': 0,
+            "estimated_size": max(8, int(height * 0.85)),
+            "text_color": (0, 0, 0),
+            "background_color": (255, 255, 255),
+            "surrounding_background": (255, 255, 255),
+            "is_bold": False,
+            "char_spacing": "normal",
+            "text_height": height,
+            "text_width": 0,
         }
 
     def _extract_text_and_bg_colors(
-        self,
-        roi: np.ndarray
+        self, roi: np.ndarray
     ) -> Tuple[Tuple[int, int, int], Tuple[int, int, int]]:
         """Extract text and background colors from ROI."""
         if roi.size == 0:
@@ -397,10 +385,7 @@ class OCRProcessor:
         return avg_stroke > 2.5 or relative_stroke > 0.08
 
     def _get_surrounding_background(
-        self,
-        image: np.ndarray,
-        bbox: List[int],
-        border_width: int = 15
+        self, image: np.ndarray, bbox: List[int], border_width: int = 15
     ) -> Tuple[int, int, int]:
         """Get background color from area surrounding the bbox."""
         x1, y1, x2, y2 = bbox
@@ -491,8 +476,8 @@ class OCRProcessor:
                 )
 
                 # Scale font size estimate to original dimensions
-                if 'estimated_size' in font_props:
-                    font_props['estimated_size'] = int(font_props['estimated_size'] * scale_y)
+                if "estimated_size" in font_props:
+                    font_props["estimated_size"] = int(font_props["estimated_size"] * scale_y)
 
                 # Scale bbox to original image coordinates
                 orig_x1 = int(proc_x1 * scale_x)
@@ -501,32 +486,31 @@ class OCRProcessor:
                 orig_y2 = int(proc_y2 * scale_y)
 
                 # Scale polygon to original coordinates
-                orig_polygon = [
-                    [int(p[0] * scale_x), int(p[1] * scale_y)]
-                    for p in bbox_points
-                ]
+                orig_polygon = [[int(p[0] * scale_x), int(p[1] * scale_y)] for p in bbox_points]
 
                 block_counter += 1
-                text_blocks.append({
-                    'block_id': f"block_{page_num}_{block_counter}",
-                    'text': text.strip(),
-                    'bbox': [orig_x1, orig_y1, orig_x2, orig_y2],
-                    'confidence': round(confidence, 3),
-                    'polygon': orig_polygon,
-                    'font_properties': font_props,
-                    'page': page_num,
-                })
+                text_blocks.append(
+                    {
+                        "block_id": f"block_{page_num}_{block_counter}",
+                        "text": text.strip(),
+                        "bbox": [orig_x1, orig_y1, orig_x2, orig_y2],
+                        "confidence": round(confidence, 3),
+                        "polygon": orig_polygon,
+                        "font_properties": font_props,
+                        "page": page_num,
+                    }
+                )
 
                 full_text_parts.append(text.strip())
 
             # Sort by position
-            text_blocks.sort(key=lambda b: (b['bbox'][1], b['bbox'][0]))
+            text_blocks.sort(key=lambda b: (b["bbox"][1], b["bbox"][0]))
 
             result = {
-                'page': page_num,
-                'text_blocks': text_blocks,
-                'full_text': ' '.join(full_text_parts),
-                'image_size': {'width': orig_w, 'height': orig_h},
+                "page": page_num,
+                "text_blocks": text_blocks,
+                "full_text": " ".join(full_text_parts),
+                "image_size": {"width": orig_w, "height": orig_h},
             }
 
             logger.debug(f"Page {page_num}: {len(text_blocks)} text blocks detected")
@@ -534,12 +518,7 @@ class OCRProcessor:
 
         except Exception as e:
             logger.error(f"OCR error on page {page_num}: {e}")
-            return {
-                'page': page_num,
-                'text_blocks': [],
-                'full_text': '',
-                'error': str(e)
-            }
+            return {"page": page_num, "text_blocks": [], "full_text": "", "error": str(e)}
 
     async def run_ocr(self, image: np.ndarray, page_num: int = 1) -> Dict:
         """
@@ -553,18 +532,9 @@ class OCRProcessor:
             OCR results with text_blocks list
         """
         loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(
-            self.executor,
-            self._run_ocr_sync,
-            image,
-            page_num
-        )
+        return await loop.run_in_executor(self.executor, self._run_ocr_sync, image, page_num)
 
-    async def run_ocr_batch(
-        self,
-        images: List[np.ndarray],
-        start_page: int = 1
-    ) -> List[Dict]:
+    async def run_ocr_batch(self, images: List[np.ndarray], start_page: int = 1) -> List[Dict]:
         """
         Run OCR on multiple images in parallel.
 
@@ -575,10 +545,7 @@ class OCRProcessor:
         Returns:
             List of OCR results
         """
-        tasks = [
-            self.run_ocr(img, start_page + i)
-            for i, img in enumerate(images)
-        ]
+        tasks = [self.run_ocr(img, start_page + i) for i, img in enumerate(images)]
 
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
@@ -586,12 +553,14 @@ class OCRProcessor:
         for i, result in enumerate(results):
             if isinstance(result, Exception):
                 logger.error(f"Page {start_page + i} OCR failed: {result}")
-                processed_results.append({
-                    'page': start_page + i,
-                    'text_blocks': [],
-                    'full_text': '',
-                    'error': str(result)
-                })
+                processed_results.append(
+                    {
+                        "page": start_page + i,
+                        "text_blocks": [],
+                        "full_text": "",
+                        "error": str(result),
+                    }
+                )
             else:
                 processed_results.append(result)
 

@@ -13,15 +13,15 @@ class TestOCRProcessorInit:
         """Should initialize with default settings."""
         # Note: This test may be slow due to EasyOCR model loading
         processor = OCRProcessor()
-        assert processor.languages == ['en']
+        assert processor.languages == ["en"]
         assert processor.preprocessing_enabled is True
         assert processor.max_workers == 4
 
     def test_custom_languages(self):
         """Should accept custom languages."""
-        processor = OCRProcessor(languages=['en', 'tr'])
-        assert 'en' in processor.languages
-        assert 'tr' in processor.languages
+        processor = OCRProcessor(languages=["en", "tr"])
+        assert "en" in processor.languages
+        assert "tr" in processor.languages
 
     def test_custom_max_workers(self):
         """Should accept custom max_workers."""
@@ -31,10 +31,10 @@ class TestOCRProcessorInit:
     def test_custom_config(self):
         """Should respect custom configuration."""
         config = {
-            'ocr_settings': {
-                'preprocessing': {
-                    'enabled': False,
-                    'use_ocr_preprocessor': False,
+            "ocr_settings": {
+                "preprocessing": {
+                    "enabled": False,
+                    "use_ocr_preprocessor": False,
                 }
             }
         }
@@ -64,14 +64,17 @@ class TestOCRProcessorPreprocessing:
 
     @pytest.fixture
     def processor(self):
-        return OCRProcessor(config={
-            'ocr_settings': {
-                'preprocessing': {
-                    'enabled': True,
-                    'use_ocr_preprocessor': False,  # Use fallback
+        return OCRProcessor(
+            config={
+                "ocr_settings": {
+                    "preprocessing": {
+                        "enabled": True,
+                        "use_ocr_preprocessor": False,  # Use fallback
+                    }
                 }
             }
-        })
+        )
+
 
 class TestOCRProcessorHelpers:
     """Tests for helper methods."""
@@ -108,10 +111,10 @@ class TestAsyncOCRProcessing:
         result = await processor.run_ocr(simple_image, page_num=1)
 
         assert isinstance(result, dict)
-        assert 'text_blocks' in result
-        assert 'full_text' in result
-        assert isinstance(result['text_blocks'], list)
-        assert isinstance(result['full_text'], str)
+        assert "text_blocks" in result
+        assert "full_text" in result
+        assert isinstance(result["text_blocks"], list)
+        assert isinstance(result["full_text"], str)
 
     @pytest.mark.asyncio
     async def test_run_ocr_empty_image(self, processor):
@@ -120,7 +123,7 @@ class TestAsyncOCRProcessing:
 
         result = await processor.run_ocr(blank_image, page_num=1)
 
-        assert result['text_blocks'] == [] or len(result['full_text'].strip()) == 0
+        assert result["text_blocks"] == [] or len(result["full_text"].strip()) == 0
 
 
 class TestOCRResultStructure:
@@ -137,7 +140,7 @@ class TestOCRResultStructure:
         img = np.ones((200, 400, 3), dtype=np.uint8) * 255
         # Add dark horizontal lines to simulate text
         for y in range(20, 180, 30):
-            img[y:y+10, 20:380] = [0, 0, 0]
+            img[y : y + 10, 20:380] = [0, 0, 0]
         return img
 
     @pytest.mark.asyncio
@@ -145,15 +148,15 @@ class TestOCRResultStructure:
         """Text blocks should have expected structure."""
         result = await processor.run_ocr(image_with_text, page_num=1)
 
-        for block in result.get('text_blocks', []):
+        for block in result.get("text_blocks", []):
             # Each block should have required fields
-            assert 'text' in block or 'bbox' in block
-            if 'bbox' in block:
+            assert "text" in block or "bbox" in block
+            if "bbox" in block:
                 # Bbox should be valid coordinates
-                bbox = block['bbox']
+                bbox = block["bbox"]
                 assert len(bbox) == 4  # 4 corners
-            if 'confidence' in block:
-                assert 0 <= block['confidence'] <= 1
+            if "confidence" in block:
+                assert 0 <= block["confidence"] <= 1
 
 
 class TestOCRConfigOptions:
@@ -162,9 +165,9 @@ class TestOCRConfigOptions:
     def test_preprocessing_disabled(self):
         """Should work with preprocessing disabled."""
         config = {
-            'ocr_settings': {
-                'preprocessing': {
-                    'enabled': False,
+            "ocr_settings": {
+                "preprocessing": {
+                    "enabled": False,
                 }
             }
         }
@@ -174,10 +177,10 @@ class TestOCRConfigOptions:
     def test_preprocessor_library_check(self):
         """Should handle missing ocr-preprocessor gracefully."""
         config = {
-            'ocr_settings': {
-                'preprocessing': {
-                    'enabled': True,
-                    'use_ocr_preprocessor': True,
+            "ocr_settings": {
+                "preprocessing": {
+                    "enabled": True,
+                    "use_ocr_preprocessor": True,
                 }
             }
         }
@@ -232,20 +235,20 @@ class TestUpdateLanguages:
 
     @pytest.fixture
     def processor(self):
-        return OCRProcessor(languages=['en'])
+        return OCRProcessor(languages=["en"])
 
     def test_update_languages_changes_reader(self, processor):
         """Should update reader when languages change."""
         old_languages = processor.languages.copy()
-        processor.update_languages(['en', 'tr'])
+        processor.update_languages(["en", "tr"])
 
-        assert processor.languages == ['en', 'tr']
+        assert processor.languages == ["en", "tr"]
         assert processor.languages != old_languages
 
     def test_update_languages_same_languages(self, processor):
         """Should not reinitialize if same languages."""
         old_reader = processor.reader
-        processor.update_languages(['en'])  # Same as initial
+        processor.update_languages(["en"])  # Same as initial
 
         assert processor.reader is old_reader
 
@@ -320,10 +323,10 @@ class TestAnalyzeFontProperties:
         bbox = [50, 80, 250, 100]
         props = processor._analyze_font_properties(sample_image, bbox, "Test text")
 
-        assert 'estimated_size' in props
-        assert 'text_color' in props
-        assert 'background_color' in props
-        assert 'is_bold' in props
+        assert "estimated_size" in props
+        assert "text_color" in props
+        assert "background_color" in props
+        assert "is_bold" in props
 
     def test_analyze_font_properties_empty_roi(self, processor):
         """Should handle empty ROI."""
@@ -332,7 +335,7 @@ class TestAnalyzeFontProperties:
         props = processor._analyze_font_properties(img, bbox, "text")
 
         # Should return default properties
-        assert 'estimated_size' in props
+        assert "estimated_size" in props
 
     def test_analyze_font_properties_out_of_bounds(self, processor):
         """Should clamp bbox to image bounds."""
@@ -354,10 +357,10 @@ class TestDefaultFontProperties:
         """Should return sensible defaults."""
         props = processor._default_font_properties(20)
 
-        assert props['estimated_size'] >= 8
-        assert props['text_color'] == (0, 0, 0)
-        assert props['background_color'] == (255, 255, 255)
-        assert props['is_bold'] is False
+        assert props["estimated_size"] >= 8
+        assert props["text_color"] == (0, 0, 0)
+        assert props["background_color"] == (255, 255, 255)
+        assert props["is_bold"] is False
 
 
 class TestExtractTextAndBgColors:
@@ -475,8 +478,8 @@ class TestRunOcrBatch:
         results = await processor.run_ocr_batch(images, start_page=1)
 
         assert len(results) == 2
-        assert results[0]['page'] == 1
-        assert results[1]['page'] == 2
+        assert results[0]["page"] == 1
+        assert results[1]["page"] == 2
 
     @pytest.mark.asyncio
     async def test_run_ocr_batch_empty(self, processor):
@@ -491,7 +494,7 @@ class TestRunOcrBatch:
 
         results = await processor.run_ocr_batch(images, start_page=5)
 
-        assert results[0]['page'] == 5
+        assert results[0]["page"] == 5
 
 
 class TestShutdown:

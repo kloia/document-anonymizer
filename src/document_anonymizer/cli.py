@@ -34,9 +34,7 @@ def setup_logging(verbose: bool = False, quiet: bool = False) -> None:
         level = logging.INFO
 
     logging.basicConfig(
-        level=level,
-        format='%(levelname)s - %(message)s',
-        handlers=[logging.StreamHandler()]
+        level=level, format="%(levelname)s - %(message)s", handlers=[logging.StreamHandler()]
     )
 
 
@@ -57,60 +55,33 @@ Examples:
         """,
     )
 
-    parser.add_argument(
-        "input",
-        help="Input PDF file or directory containing PDFs"
-    )
-    parser.add_argument(
-        "-o", "--output",
-        required=True,
-        help="Output file or directory"
-    )
-    parser.add_argument(
-        "-c", "--config",
-        default=None,
-        help="Custom configuration YAML file"
-    )
+    parser.add_argument("input", help="Input PDF file or directory containing PDFs")
+    parser.add_argument("-o", "--output", required=True, help="Output file or directory")
+    parser.add_argument("-c", "--config", default=None, help="Custom configuration YAML file")
     parser.add_argument(
         "--dry-run",
         action="store_true",
-        help="Analyze only, do not mask (shows what would be anonymized)"
+        help="Analyze only, do not mask (shows what would be anonymized)",
     )
     parser.add_argument(
         "--no-review",
         action="store_true",
-        help="Skip interactive review for medium confidence fields"
+        help="Skip interactive review for medium confidence fields",
     )
     parser.add_argument(
-        "-v", "--verbose",
-        action="store_true",
-        help="Verbose output (debug logging)"
+        "-v", "--verbose", action="store_true", help="Verbose output (debug logging)"
     )
-    parser.add_argument(
-        "-q", "--quiet",
-        action="store_true",
-        help="Quiet mode (only show errors)"
-    )
-    parser.add_argument(
-        "--no-verify",
-        action="store_true",
-        help="Skip post-masking verification"
-    )
+    parser.add_argument("-q", "--quiet", action="store_true", help="Quiet mode (only show errors)")
+    parser.add_argument("--no-verify", action="store_true", help="Skip post-masking verification")
     parser.add_argument(
         "--save-registry",
         default=None,
-        help="Path to save token registry (for cross-document consistency)"
+        help="Path to save token registry (for cross-document consistency)",
     )
     parser.add_argument(
-        "--load-registry",
-        default=None,
-        help="Path to load existing token registry"
+        "--load-registry", default=None, help="Path to load existing token registry"
     )
-    parser.add_argument(
-        "--version",
-        action="version",
-        version=f"%(prog)s {__version__}"
-    )
+    parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
 
     return parser
 
@@ -167,30 +138,30 @@ async def interactive_review(fields: list) -> list:
         print(f"  Type: {field.get('field_type', 'unknown')}")
         print(f"  Confidence: {field.get('confidence', 0):.2f}")
         print(f"  Page: {field.get('page', 'N/A')}")
-        if field.get('reason'):
+        if field.get("reason"):
             print(f"  Reason: {field.get('reason')}")
 
         while True:
             response = input("\n  Mask this field? [Y/n/a/s/?]: ").strip().lower()
 
-            if response in ('', 'y', 'yes'):
+            if response in ("", "y", "yes"):
                 approved.append(field)
                 print("  → Approved for masking")
                 break
-            elif response in ('n', 'no'):
+            elif response in ("n", "no"):
                 print("  → Skipped")
                 break
-            elif response in ('a', 'all'):
+            elif response in ("a", "all"):
                 # Approve all remaining
                 approved.append(field)
                 approved.extend(fields[i:])
                 print(f"  → Approved all remaining ({len(fields) - i + 1} fields)")
                 return approved
-            elif response in ('s', 'skip'):
+            elif response in ("s", "skip"):
                 # Skip all remaining
                 print(f"  → Skipped all remaining ({len(fields) - i + 1} fields)")
                 return approved
-            elif response == '?':
+            elif response == "?":
                 print("\n  Commands:")
                 print("    Y/Enter - Yes, mask this field")
                 print("    N       - No, skip this field")
@@ -214,13 +185,13 @@ async def run_anonymization(args: argparse.Namespace) -> int:
         logging.error(f"Input not found: {input_path}")
         return 1
 
-    if input_path.is_file() and not input_path.suffix.lower() == '.pdf':
+    if input_path.is_file() and not input_path.suffix.lower() == ".pdf":
         logging.error(f"Input must be a PDF file: {input_path}")
         return 1
 
     # Determine output directory
     if input_path.is_file():
-        if output_path.suffix.lower() == '.pdf':
+        if output_path.suffix.lower() == ".pdf":
             output_dir = output_path.parent
             output_dir.mkdir(parents=True, exist_ok=True)
         else:
@@ -274,9 +245,7 @@ async def run_anonymization(args: argparse.Namespace) -> int:
                 review_callback = interactive_review
 
             report = await anonymizer.anonymize_document(
-                str(input_path),
-                str(output_dir),
-                review_callback=review_callback
+                str(input_path), str(output_dir), review_callback=review_callback
             )
 
         # Calculate duration
@@ -291,14 +260,14 @@ async def run_anonymization(args: argparse.Namespace) -> int:
             anonymizer.save_token_registry(args.save_registry)
             logging.info(f"Token registry saved: {args.save_registry}")
 
-        if report.get('status') == 'success':
+        if report.get("status") == "success":
             print(f"\n✓ Output: {report.get('output_path')}")
             print(f"✓ Completed in {format_duration(duration)}")
             return 0
-        elif report.get('status') == 'dry_run':
-            auto_count = report.get('auto_mask_count', 0)
-            review_count = report.get('needs_review_count', 0)
-            total = len(report.get('detected_fields', []))
+        elif report.get("status") == "dry_run":
+            auto_count = report.get("auto_mask_count", 0)
+            review_count = report.get("needs_review_count", 0)
+            total = len(report.get("detected_fields", []))
             print(f"\n✓ Detected {total} sensitive fields:")
             print(f"  - Auto-mask (high confidence): {auto_count}")
             print(f"  - Needs review (medium confidence): {review_count}")
@@ -312,17 +281,14 @@ async def run_anonymization(args: argparse.Namespace) -> int:
         # Batch processing
         logging.info(f"Processing directory: {input_path}")
 
-        reports = await anonymizer.anonymize_batch(
-            str(input_path),
-            str(output_dir)
-        )
+        reports = await anonymizer.anonymize_batch(str(input_path), str(output_dir))
 
         # Calculate duration
         duration = time.time() - start_time
 
         # Summary
-        successful = sum(1 for r in reports if r.get('status') == 'success')
-        failed = sum(1 for r in reports if r.get('status') == 'failed')
+        successful = sum(1 for r in reports if r.get("status") == "success")
+        failed = sum(1 for r in reports if r.get("status") == "failed")
 
         print("\n" + "=" * 60)
         print("BATCH PROCESSING SUMMARY")
@@ -335,7 +301,7 @@ async def run_anonymization(args: argparse.Namespace) -> int:
         if failed > 0:
             print("\nFailed files:")
             for r in reports:
-                if r.get('status') == 'failed':
+                if r.get("status") == "failed":
                     print(f"  ✗ {r.get('document')}: {r.get('error')}")
 
         # Save registry
