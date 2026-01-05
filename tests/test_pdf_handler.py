@@ -96,7 +96,7 @@ class TestImagesToPdf:
             images = [
                 np.ones((100, 200, 3), dtype=np.uint8) * 255,  # Landscape
                 np.ones((300, 150, 3), dtype=np.uint8) * 128,  # Portrait
-                np.ones((200, 200, 3), dtype=np.uint8) * 64,   # Square
+                np.ones((200, 200, 3), dtype=np.uint8) * 64,  # Square
             ]
 
             result = images_to_pdf(images, str(output_path))

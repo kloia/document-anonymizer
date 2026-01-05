@@ -20,10 +20,7 @@ class TestTextRendererInit:
     def test_custom_config(self):
         """Should use custom config values."""
         config = {
-            "masking_strategy": {
-                "font": {"auto_scale": False},
-                "text_fields": {"padding": 10}
-            }
+            "masking_strategy": {"font": {"auto_scale": False}, "text_fields": {"padding": 10}}
         }
         renderer = TextRenderer(config=config)
         assert renderer.auto_scale is False
@@ -130,7 +127,7 @@ class TestMaskAndRender:
             "field_type": "person_name",
             "bbox": (50, 50, 150, 80),
             "page": 1,
-            "detection_method": "llm"
+            "detection_method": "llm",
         }
         result, dummy = renderer.mask_and_render(sample_image.copy(), field)
 
@@ -148,7 +145,7 @@ class TestMaskAndRender:
             "field_type": "person_name",
             "bbox": (50, 50, 200, 80),
             "page": 1,
-            "detection_method": "llm"
+            "detection_method": "llm",
         }
         result, dummy = renderer.mask_and_render(sample_image.copy(), field)
 
@@ -161,7 +158,7 @@ class TestMaskAndRender:
             "text": "[SIGNATURE]",
             "field_type": "signature",
             "bbox": (50, 50, 150, 120),
-            "detection_method": "visual_detection"
+            "detection_method": "visual_detection",
         }
         result, dummy = renderer.mask_and_render(sample_image.copy(), field)
 
@@ -197,8 +194,8 @@ class TestFontLoading:
         font12 = renderer._load_styled_font(12, is_bold=False)
         font20 = renderer._load_styled_font(20, is_bold=False)
         # Both should be loaded (different cache keys)
-        assert ('normal', 12) in renderer._font_cache
-        assert ('normal', 20) in renderer._font_cache
+        assert ("normal", 12) in renderer._font_cache
+        assert ("normal", 20) in renderer._font_cache
 
 
 class TestMaskAndRenderEdgeCases:
@@ -219,7 +216,7 @@ class TestMaskAndRenderEdgeCases:
             "text": "[STAMP]",
             "field_type": "stamp",
             "bbox": (50, 50, 150, 120),
-            "detection_method": "visual_detection"
+            "detection_method": "visual_detection",
         }
         result, dummy = renderer.mask_and_render(sample_image.copy(), field)
         assert dummy == ""
@@ -230,7 +227,7 @@ class TestMaskAndRenderEdgeCases:
             "text": "Visual element",
             "field_type": "unknown",
             "bbox": (50, 50, 150, 100),
-            "detection_method": "visual_detection"
+            "detection_method": "visual_detection",
         }
         result, dummy = renderer.mask_and_render(sample_image.copy(), field)
         assert dummy == ""
@@ -247,8 +244,8 @@ class TestMaskAndRenderEdgeCases:
             "font_properties": {
                 "estimated_size": 14,
                 "is_bold": True,
-                "background_color": (255, 255, 255)
-            }
+                "background_color": (255, 255, 255),
+            },
         }
         result, dummy = renderer.mask_and_render(sample_image.copy(), field)
         assert len(dummy) > 0
@@ -261,7 +258,7 @@ class TestMaskAndRenderEdgeCases:
             "field_type": "person_name",
             "bbox": [50, 50, 150, 80],
             "page": 1,
-            "detection_method": "llm"
+            "detection_method": "llm",
         }
         result, dummy = renderer.mask_and_render(sample_image.copy(), field)
         assert result is not None

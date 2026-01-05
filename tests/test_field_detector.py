@@ -27,13 +27,13 @@ class TestFieldDetectorConstants:
             assert isinstance(regulations, list)
             assert len(regulations) > 0
             # Check for known regulations
-            valid_regs = {'GDPR', 'KVKK', 'CCPA', 'LGPD', 'HIPAA'}
+            valid_regs = {"GDPR", "KVKK", "CCPA", "LGPD", "HIPAA"}
             for reg in regulations:
                 assert reg in valid_regs, f"Unknown regulation: {reg}"
 
     def test_pattern_risk_levels(self):
         """Pattern risk levels should be valid."""
-        valid_levels = {'LOW', 'MEDIUM', 'HIGH', 'CRITICAL'}
+        valid_levels = {"LOW", "MEDIUM", "HIGH", "CRITICAL"}
         for pattern_type, level in PATTERN_RISK_LEVELS.items():
             assert level in valid_levels, f"Invalid risk level: {level}"
 
@@ -52,11 +52,11 @@ class TestFieldDetectorInit:
     def test_custom_config(self):
         """Should respect custom configuration."""
         config = {
-            'detection_rules': {
-                'use_llm_classification': False,
-                'use_fallback_detection': False,
-                'min_confidence': 0.5,
-                'auto_mask_confidence': 0.9,
+            "detection_rules": {
+                "use_llm_classification": False,
+                "use_fallback_detection": False,
+                "min_confidence": 0.5,
+                "auto_mask_confidence": 0.9,
             }
         }
         detector = FieldDetector(config=config)
@@ -84,34 +84,36 @@ class TestFieldDetectorPatternMatching:
     @pytest.fixture
     def detector(self):
         """Create detector with LLM disabled."""
-        return FieldDetector(config={
-            'detection_rules': {
-                'use_llm_classification': False,
-                'use_fallback_detection': True,
+        return FieldDetector(
+            config={
+                "detection_rules": {
+                    "use_llm_classification": False,
+                    "use_fallback_detection": True,
+                }
             }
-        })
+        )
 
     def test_detect_email_pattern(self, detector):
         """Should detect email patterns."""
         # Test email regex directly
-        email_pattern = detector._patterns.get('email')
+        email_pattern = detector._patterns.get("email")
         if email_pattern:
-            assert email_pattern.search('john@example.com') is not None
-            assert email_pattern.search('test.user@company.co.uk') is not None
+            assert email_pattern.search("john@example.com") is not None
+            assert email_pattern.search("test.user@company.co.uk") is not None
 
     def test_detect_phone_pattern(self, detector):
         """Should detect country-specific phone patterns."""
         # Test Turkish phone pattern
-        phone_tr = detector._patterns.get('phone_tr')
+        phone_tr = detector._patterns.get("phone_tr")
         if phone_tr:
-            assert phone_tr.search('+90 532 123 45 67') is not None
+            assert phone_tr.search("+90 532 123 45 67") is not None
 
     def test_detect_ip_address_pattern(self, detector):
         """Should detect IP address patterns."""
-        ip_pattern = detector._patterns.get('ip_address')
+        ip_pattern = detector._patterns.get("ip_address")
         if ip_pattern:
-            assert ip_pattern.search('192.168.1.1') is not None
-            assert ip_pattern.search('10.0.0.1') is not None
+            assert ip_pattern.search("192.168.1.1") is not None
+            assert ip_pattern.search("10.0.0.1") is not None
 
 
 class TestFieldDetectorSeparation:
@@ -124,19 +126,23 @@ class TestFieldDetectorSeparation:
     def test_separate_by_confidence(self, detector):
         """Fields should be separated by confidence threshold."""
         fields = [
-            {'text': 'high', 'confidence': 0.95},
-            {'text': 'medium', 'confidence': 0.75},
-            {'text': 'low', 'confidence': 0.50},
+            {"text": "high", "confidence": 0.95},
+            {"text": "medium", "confidence": 0.75},
+            {"text": "low", "confidence": 0.50},
         ]
 
-        auto_mask = [f for f in fields if f['confidence'] >= detector.auto_mask_confidence]
-        review = [f for f in fields if detector.min_confidence <= f['confidence'] < detector.auto_mask_confidence]
-        ignored = [f for f in fields if f['confidence'] < detector.min_confidence]
+        auto_mask = [f for f in fields if f["confidence"] >= detector.auto_mask_confidence]
+        review = [
+            f
+            for f in fields
+            if detector.min_confidence <= f["confidence"] < detector.auto_mask_confidence
+        ]
+        ignored = [f for f in fields if f["confidence"] < detector.min_confidence]
 
         assert len(auto_mask) == 1
-        assert auto_mask[0]['text'] == 'high'
+        assert auto_mask[0]["text"] == "high"
         assert len(review) == 1
-        assert review[0]['text'] == 'medium'
+        assert review[0]["text"] == "medium"
         assert len(ignored) == 1
 
 
@@ -150,8 +156,8 @@ class TestFieldDetectorHelpers:
     def test_pattern_to_field_type_mapping(self, detector):
         """Pattern names should map to field types correctly."""
         # Common patterns should exist
-        assert 'email' in detector._patterns
-        assert 'ip_address' in detector._patterns
+        assert "email" in detector._patterns
+        assert "ip_address" in detector._patterns
 
 
 class TestAsyncDetection:
@@ -160,12 +166,14 @@ class TestAsyncDetection:
     @pytest.fixture
     def detector(self):
         """Detector with LLM disabled for testing."""
-        return FieldDetector(config={
-            'detection_rules': {
-                'use_llm_classification': False,
-                'use_fallback_detection': True,
+        return FieldDetector(
+            config={
+                "detection_rules": {
+                    "use_llm_classification": False,
+                    "use_fallback_detection": True,
+                }
             }
-        })
+        )
 
     @pytest.fixture
     def sample_image(self):
@@ -177,16 +185,16 @@ class TestAsyncDetection:
         """Sample OCR results."""
         return [
             {
-                'text': 'john@example.com',
-                'bbox': [[10, 10], [90, 10], [90, 20], [10, 20]],
-                'confidence': 0.95,
-                'block_id': 1,
+                "text": "john@example.com",
+                "bbox": [[10, 10], [90, 10], [90, 20], [10, 20]],
+                "confidence": 0.95,
+                "block_id": 1,
             },
             {
-                'text': '+90 532 123 4567',
-                'bbox': [[10, 30], [90, 30], [90, 40], [10, 40]],
-                'confidence': 0.90,
-                'block_id': 2,
+                "text": "+90 532 123 4567",
+                "bbox": [[10, 30], [90, 30], [90, 40], [10, 40]],
+                "confidence": 0.90,
+                "block_id": 2,
             },
         ]
 
@@ -196,9 +204,7 @@ class TestAsyncDetection:
     ):
         """detect_sensitive_fields should return tuple of two lists."""
         result = await detector.detect_sensitive_fields(
-            sample_image,
-            sample_ocr_results,
-            page_num=1
+            sample_image, sample_ocr_results, page_num=1
         )
 
         assert isinstance(result, tuple)
@@ -212,30 +218,30 @@ class TestRiskLevelMapping:
 
     def test_critical_patterns(self):
         """Critical patterns should be correctly identified."""
-        critical_patterns = [k for k, v in PATTERN_RISK_LEVELS.items() if v == 'CRITICAL']
-        assert 'ssn_us' in critical_patterns
-        assert 'nino_uk' in critical_patterns
-        assert 'cf_it' in critical_patterns
+        critical_patterns = [k for k, v in PATTERN_RISK_LEVELS.items() if v == "CRITICAL"]
+        assert "ssn_us" in critical_patterns
+        assert "nino_uk" in critical_patterns
+        assert "cf_it" in critical_patterns
 
     def test_high_risk_patterns(self):
         """High risk patterns should be correctly identified."""
-        high_patterns = [k for k, v in PATTERN_RISK_LEVELS.items() if v == 'HIGH']
-        assert 'plate_tr' in high_patterns
-        assert 'plate_uk' in high_patterns
-        assert 'plate_fr' in high_patterns
+        high_patterns = [k for k, v in PATTERN_RISK_LEVELS.items() if v == "HIGH"]
+        assert "plate_tr" in high_patterns
+        assert "plate_uk" in high_patterns
+        assert "plate_fr" in high_patterns
 
     def test_medium_risk_patterns(self):
         """Medium risk patterns should be correctly identified."""
-        medium_patterns = [k for k, v in PATTERN_RISK_LEVELS.items() if v == 'MEDIUM']
-        assert 'email' in medium_patterns
-        assert 'phone_tr' in medium_patterns
-        assert 'ip_address' in medium_patterns
+        medium_patterns = [k for k, v in PATTERN_RISK_LEVELS.items() if v == "MEDIUM"]
+        assert "email" in medium_patterns
+        assert "phone_tr" in medium_patterns
+        assert "ip_address" in medium_patterns
 
     def test_low_risk_patterns(self):
         """Low risk patterns should be correctly identified."""
-        low_patterns = [k for k, v in PATTERN_RISK_LEVELS.items() if v == 'LOW']
-        assert 'date_iso' in low_patterns or 'date_eu' in low_patterns
-        assert 'postal_uk' in low_patterns
+        low_patterns = [k for k, v in PATTERN_RISK_LEVELS.items() if v == "LOW"]
+        assert "date_iso" in low_patterns or "date_eu" in low_patterns
+        assert "postal_uk" in low_patterns
 
 
 class TestRegulationMapping:
@@ -243,19 +249,19 @@ class TestRegulationMapping:
 
     def test_gdpr_coverage(self):
         """GDPR should cover many patterns."""
-        gdpr_patterns = [k for k, v in PATTERN_REGULATIONS.items() if 'GDPR' in v]
+        gdpr_patterns = [k for k, v in PATTERN_REGULATIONS.items() if "GDPR" in v]
         assert len(gdpr_patterns) >= 3
 
     def test_kvkk_coverage(self):
         """KVKK should cover relevant patterns."""
-        kvkk_patterns = [k for k, v in PATTERN_REGULATIONS.items() if 'KVKK' in v]
-        assert 'phone_tr' in kvkk_patterns
-        assert 'plate_tr' in kvkk_patterns
+        kvkk_patterns = [k for k, v in PATTERN_REGULATIONS.items() if "KVKK" in v]
+        assert "phone_tr" in kvkk_patterns
+        assert "plate_tr" in kvkk_patterns
 
     def test_ccpa_coverage(self):
         """CCPA should cover relevant patterns."""
-        ccpa_patterns = [k for k, v in PATTERN_REGULATIONS.items() if 'CCPA' in v]
-        assert 'ssn_us' in ccpa_patterns
+        ccpa_patterns = [k for k, v in PATTERN_REGULATIONS.items() if "CCPA" in v]
+        assert "ssn_us" in ccpa_patterns
 
 
 class TestPatternDetection:
@@ -263,41 +269,49 @@ class TestPatternDetection:
 
     @pytest.fixture
     def detector(self):
-        return FieldDetector(config={
-            'detection_rules': {
-                'use_llm_classification': False,
-                'use_fallback_detection': True,
+        return FieldDetector(
+            config={
+                "detection_rules": {
+                    "use_llm_classification": False,
+                    "use_fallback_detection": True,
+                }
             }
-        })
+        )
 
     def test_detect_email_in_ocr_results(self, detector):
         """Should detect email in OCR results."""
         ocr_results = [
-            {'text': 'Contact: john@example.com', 'bbox': [0, 0, 100, 20],
-             'block_id': 'b1', 'confidence': 0.9}
+            {
+                "text": "Contact: john@example.com",
+                "bbox": [0, 0, 100, 20],
+                "block_id": "b1",
+                "confidence": 0.9,
+            }
         ]
         fields = detector._detect_by_patterns(ocr_results, page_num=1)
 
-        email_fields = [f for f in fields if f['field_type'] == 'email']
+        email_fields = [f for f in fields if f["field_type"] == "email"]
         assert len(email_fields) >= 1
-        assert email_fields[0]['text'] == 'john@example.com'
+        assert email_fields[0]["text"] == "john@example.com"
 
     def test_detect_phone_in_ocr_results(self, detector):
         """Should detect phone numbers."""
         ocr_results = [
-            {'text': 'Tel: +90 532 123 4567', 'bbox': [0, 0, 100, 20],
-             'block_id': 'b1', 'confidence': 0.9}
+            {
+                "text": "Tel: +90 532 123 4567",
+                "bbox": [0, 0, 100, 20],
+                "block_id": "b1",
+                "confidence": 0.9,
+            }
         ]
         fields = detector._detect_by_patterns(ocr_results, page_num=1)
 
-        phone_fields = [f for f in fields if 'phone' in f['field_type']]
+        phone_fields = [f for f in fields if "phone" in f["field_type"]]
         assert len(phone_fields) >= 1
 
     def test_skip_short_text(self, detector):
         """Should skip text shorter than 3 characters."""
-        ocr_results = [
-            {'text': 'AB', 'bbox': [0, 0, 20, 10], 'block_id': 'b1', 'confidence': 0.9}
-        ]
+        ocr_results = [{"text": "AB", "bbox": [0, 0, 20, 10], "block_id": "b1", "confidence": 0.9}]
         fields = detector._detect_by_patterns(ocr_results, page_num=1)
         assert len(fields) == 0
 
@@ -330,30 +344,42 @@ class TestLegalEntityDetection:
     def test_detect_ltd_company(self, detector):
         """Should detect Ltd company."""
         ocr_results = [
-            {'text': 'Acme Technologies Ltd.', 'bbox': [0, 0, 200, 20],
-             'block_id': 'b1', 'confidence': 0.9}
+            {
+                "text": "Acme Technologies Ltd.",
+                "bbox": [0, 0, 200, 20],
+                "block_id": "b1",
+                "confidence": 0.9,
+            }
         ]
         fields = detector._detect_legal_entities(ocr_results, page_num=1)
 
         assert len(fields) >= 1
-        assert fields[0]['field_type'] == 'company_name'
+        assert fields[0]["field_type"] == "company_name"
 
     def test_detect_gmbh_company(self, detector):
         """Should detect GmbH company."""
         ocr_results = [
-            {'text': 'Deutsche Software GmbH', 'bbox': [0, 0, 200, 20],
-             'block_id': 'b1', 'confidence': 0.9}
+            {
+                "text": "Deutsche Software GmbH",
+                "bbox": [0, 0, 200, 20],
+                "block_id": "b1",
+                "confidence": 0.9,
+            }
         ]
         fields = detector._detect_legal_entities(ocr_results, page_num=1)
 
         assert len(fields) >= 1
-        assert fields[0]['field_type'] == 'company_name'
+        assert fields[0]["field_type"] == "company_name"
 
     def test_detect_as_company(self, detector):
         """Should detect A.Ş. (Turkish) company."""
         ocr_results = [
-            {'text': 'Turk Telekom A.Ş.', 'bbox': [0, 0, 200, 20],
-             'block_id': 'b1', 'confidence': 0.9}
+            {
+                "text": "Turk Telekom A.Ş.",
+                "bbox": [0, 0, 200, 20],
+                "block_id": "b1",
+                "confidence": 0.9,
+            }
         ]
         fields = detector._detect_legal_entities(ocr_results, page_num=1)
 
@@ -361,9 +387,7 @@ class TestLegalEntityDetection:
 
     def test_skip_short_company_names(self, detector):
         """Should skip short texts."""
-        ocr_results = [
-            {'text': 'Ltd', 'bbox': [0, 0, 30, 20], 'block_id': 'b1', 'confidence': 0.9}
-        ]
+        ocr_results = [{"text": "Ltd", "bbox": [0, 0, 30, 20], "block_id": "b1", "confidence": 0.9}]
         fields = detector._detect_legal_entities(ocr_results, page_num=1)
         # Less than 5 chars should be skipped
         assert len(fields) == 0
@@ -379,24 +403,44 @@ class TestDeduplication:
     def test_remove_exact_duplicates(self, detector):
         """Should remove exact duplicates."""
         fields = [
-            {'block_id': 'b1', 'field_type': 'email', 'text': 'a@b.com',
-             'confidence': 0.9, 'bbox': [0, 0, 100, 20]},
-            {'block_id': 'b1', 'field_type': 'email', 'text': 'a@b.com',
-             'confidence': 0.8, 'bbox': [0, 0, 100, 20]},
+            {
+                "block_id": "b1",
+                "field_type": "email",
+                "text": "a@b.com",
+                "confidence": 0.9,
+                "bbox": [0, 0, 100, 20],
+            },
+            {
+                "block_id": "b1",
+                "field_type": "email",
+                "text": "a@b.com",
+                "confidence": 0.8,
+                "bbox": [0, 0, 100, 20],
+            },
         ]
 
         unique = detector._deduplicate_fields(fields)
         assert len(unique) == 1
         # Higher confidence should be kept
-        assert unique[0]['confidence'] == 0.9
+        assert unique[0]["confidence"] == 0.9
 
     def test_keep_different_types(self, detector):
         """Should keep fields of different types from same block."""
         fields = [
-            {'block_id': 'b1', 'field_type': 'email', 'text': 'a@b.com',
-             'confidence': 0.9, 'bbox': [0, 0, 100, 20]},
-            {'block_id': 'b1', 'field_type': 'person_name', 'text': 'John',
-             'confidence': 0.8, 'bbox': [0, 0, 100, 20]},
+            {
+                "block_id": "b1",
+                "field_type": "email",
+                "text": "a@b.com",
+                "confidence": 0.9,
+                "bbox": [0, 0, 100, 20],
+            },
+            {
+                "block_id": "b1",
+                "field_type": "person_name",
+                "text": "John",
+                "confidence": 0.8,
+                "bbox": [0, 0, 100, 20],
+            },
         ]
 
         unique = detector._deduplicate_fields(fields)
@@ -460,6 +504,7 @@ class TestAsyncClose:
         detector = FieldDetector()
         # Manually set classifier to test close
         from unittest.mock import AsyncMock, MagicMock
+
         mock_classifier = MagicMock()
         mock_classifier.close = AsyncMock()
         detector._classifier = mock_classifier

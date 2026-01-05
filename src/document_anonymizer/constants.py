@@ -12,12 +12,14 @@ from typing import Dict, List, Set  # Set used by ALL_LEGAL_SUFFIXES, etc.
 # ENTITY NAMESPACES
 # =============================================================================
 
+
 class EntityNamespace(Enum):
     """
     Entity namespaces for token generation.
 
     Provides consistent prefixes for anonymized tokens across documents.
     """
+
     # Personal entities
     PERSON = "PER"
     ORGANIZATION = "ORG"
@@ -55,8 +57,10 @@ class EntityNamespace(Enum):
 # DOCUMENT TYPES
 # =============================================================================
 
+
 class DocumentType(Enum):
     """Generic document types."""
+
     INVOICE = "invoice"
     CONTRACT = "contract"
     LETTER = "letter"
@@ -80,47 +84,85 @@ class DocumentType(Enum):
 # Legal entity suffixes by region
 LEGAL_ENTITY_SUFFIXES: Dict[str, List[str]] = {
     "english": [
-        "LTD", "LTD.", "LIMITED",
-        "INC", "INC.", "INCORPORATED",
-        "CORP", "CORP.", "CORPORATION",
-        "CO", "CO.", "COMPANY",
-        "LLC", "L.L.C.",
-        "LLP", "L.L.P.",
-        "PLC", "P.L.C.",
-        "LP", "L.P.",
+        "LTD",
+        "LTD.",
+        "LIMITED",
+        "INC",
+        "INC.",
+        "INCORPORATED",
+        "CORP",
+        "CORP.",
+        "CORPORATION",
+        "CO",
+        "CO.",
+        "COMPANY",
+        "LLC",
+        "L.L.C.",
+        "LLP",
+        "L.L.P.",
+        "PLC",
+        "P.L.C.",
+        "LP",
+        "L.P.",
     ],
     "turkish": [
-        "A.S.", "A.Ş.", "AS", "AŞ",
-        "LTD", "LTD.", "LTD.ŞTİ.", "LTD. ŞTİ.",
-        "ŞTİ", "ŞTİ.",
-        "HOLDİNG", "HOLDING",
+        "A.S.",
+        "A.Ş.",
+        "AS",
+        "AŞ",
+        "LTD",
+        "LTD.",
+        "LTD.ŞTİ.",
+        "LTD. ŞTİ.",
+        "ŞTİ",
+        "ŞTİ.",
+        "HOLDİNG",
+        "HOLDING",
     ],
     "german": [
-        "GMBH", "G.M.B.H.", "GMBH & CO. KG",
-        "AG", "A.G.",
-        "KG", "K.G.",
-        "OHG", "O.H.G.",
+        "GMBH",
+        "G.M.B.H.",
+        "GMBH & CO. KG",
+        "AG",
+        "A.G.",
+        "KG",
+        "K.G.",
+        "OHG",
+        "O.H.G.",
     ],
     "french": [
-        "SARL", "S.A.R.L.",
-        "SA", "S.A.",
-        "SAS", "S.A.S.",
-        "EURL", "E.U.R.L.",
+        "SARL",
+        "S.A.R.L.",
+        "SA",
+        "S.A.",
+        "SAS",
+        "S.A.S.",
+        "EURL",
+        "E.U.R.L.",
     ],
     "italian": [
-        "SRL", "S.R.L.",
-        "SPA", "S.P.A.",
+        "SRL",
+        "S.R.L.",
+        "SPA",
+        "S.P.A.",
     ],
     "dutch": [
-        "BV", "B.V.",
-        "NV", "N.V.",
+        "BV",
+        "B.V.",
+        "NV",
+        "N.V.",
     ],
     "arabic": [
-        "WLL", "W.L.L.",
-        "LLC", "L.L.C.",
-        "FZE", "F.Z.E.",
-        "FZC", "F.Z.C.",
-        "JSC", "J.S.C.",
+        "WLL",
+        "W.L.L.",
+        "LLC",
+        "L.L.C.",
+        "FZE",
+        "F.Z.E.",
+        "FZC",
+        "F.Z.C.",
+        "JSC",
+        "J.S.C.",
     ],
 }
 
@@ -143,7 +185,6 @@ REFERENCE_PATTERNS: Dict[str, str] = {
     "date_iso": r"\d{4}-\d{2}-\d{2}",
     "date_us": r"\d{1,2}/\d{1,2}/\d{2,4}",
     "date_eu": r"\d{1,2}\.\d{1,2}\.\d{2,4}",
-
     # === National ID patterns (specific formats only) ===
     # US: Social Security Number (XXX-XX-XXXX) - dash format is unique
     "ssn_us": r"\b\d{3}-\d{2}-\d{4}\b",
@@ -155,7 +196,6 @@ REFERENCE_PATTERNS: Dict[str, str] = {
     "cf_it": r"\b[A-Z]{6}\d{2}[A-Z]\d{2}[A-Z]\d{3}[A-Z]\b",
     # Spain: DNI/NIE (8 digits + letter or X/Y/Z + 7 digits + letter)
     "dni_es": r"\b(\d{8}[A-Z]|[XYZ]\d{7}[A-Z])\b",
-
     # === License plate patterns (specific formats only) ===
     # Turkey: 34 ABC 1234 (city code + letters + numbers)
     "plate_tr": r"\b\d{2}\s*[A-Z]{1,3}\s*\d{2,4}\b",
@@ -169,11 +209,9 @@ REFERENCE_PATTERNS: Dict[str, str] = {
     "plate_es": r"\b\d{4}\s*[A-Z]{3}\b",
     # Russia: A123BC 77 (letter + digits + letters + region)
     "plate_ru": r"\b[A-Z]\d{3}[A-Z]{2}\s*\d{2,3}\b",
-
     # === Postal code patterns (only UK - others are just digits) ===
     # UK: SW1A 1AA (letter+digit+letter format is unique)
     "postal_uk": r"\b[A-Z]{1,2}\d{1,2}[A-Z]?\s*\d[A-Z]{2}\b",
-
     # === Phone patterns (country code prefix required) ===
     # US/Canada: +1 XXX XXX XXXX
     "phone_us": r"\+1\s*\(?\d{3}\)?\s*\d{3}\s*\d{4}",
@@ -212,10 +250,22 @@ EXPECTED_MASKED_PATTERNS: List[str] = [
 
 # Generic document phrases (not sensitive)
 GENERIC_DOCUMENT_PHRASES: Set[str] = {
-    "date", "page", "total", "amount", "quantity",
-    "description", "price", "tax", "subtotal",
-    "terms and conditions", "please", "thank you",
-    "sincerely", "regards", "dear", "reference",
+    "date",
+    "page",
+    "total",
+    "amount",
+    "quantity",
+    "description",
+    "price",
+    "tax",
+    "subtotal",
+    "terms and conditions",
+    "please",
+    "thank you",
+    "sincerely",
+    "regards",
+    "dear",
+    "reference",
 }
 
 # Boilerplate patterns (not sensitive)
@@ -307,12 +357,28 @@ def has_legal_suffix(text: str) -> bool:
 
     # Skip if text looks like a sentence (has multiple spaces and common words)
     lower_text = text.lower()
-    sentence_indicators = ['you', 'the', 'for', 'and', 'can', 'will', 'with', 'this', 'that']
-    if sum(1 for ind in sentence_indicators if f' {ind} ' in lower_text) >= 2:
+    sentence_indicators = ["you", "the", "for", "and", "can", "will", "with", "this", "that"]
+    if sum(1 for ind in sentence_indicators if f" {ind} " in lower_text) >= 2:
         return False
 
     # Suffixes that are too short and cause false positives
-    short_suffixes = {'CO', 'CO.', 'IN', 'AG', 'A.G.', 'KG', 'K.G.', 'LP', 'L.P.', 'BV', 'B.V.', 'NV', 'N.V.', 'SA', 'S.A.'}
+    short_suffixes = {
+        "CO",
+        "CO.",
+        "IN",
+        "AG",
+        "A.G.",
+        "KG",
+        "K.G.",
+        "LP",
+        "L.P.",
+        "BV",
+        "B.V.",
+        "NV",
+        "N.V.",
+        "SA",
+        "S.A.",
+    }
 
     for suffix in ALL_LEGAL_SUFFIXES:
         # Skip very short suffixes - too many false positives
@@ -322,13 +388,13 @@ def has_legal_suffix(text: str) -> bool:
         # Must end with suffix or have suffix at word boundary
         if text_upper.endswith(suffix):
             # Ensure there's a word before the suffix (not just the suffix alone)
-            prefix = text_upper[:-len(suffix)].strip()
+            prefix = text_upper[: -len(suffix)].strip()
             if len(prefix) >= 2:
                 return True
 
         # Check for suffix followed by punctuation or end of text
         # e.g., "Acme Ltd." or "Acme, Ltd"
-        pattern = rf'\b[A-Z][A-Z0-9&\s]+\s+{re.escape(suffix)}(?:[.,]|\s|$)'
+        pattern = rf"\b[A-Z][A-Z0-9&\s]+\s+{re.escape(suffix)}(?:[.,]|\s|$)"
         if re.search(pattern, text_upper):
             return True
 

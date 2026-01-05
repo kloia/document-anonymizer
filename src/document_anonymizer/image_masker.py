@@ -27,9 +27,7 @@ class ImageMasker:
         self.config = config or {}
 
     def mask_signature_stamp_contour(
-        self,
-        image: np.ndarray,
-        bbox: Tuple[int, int, int, int]
+        self, image: np.ndarray, bbox: Tuple[int, int, int, int]
     ) -> np.ndarray:
         """
         Mask signature/stamp areas using contour detection.
@@ -52,15 +50,11 @@ class ImageMasker:
             cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
             cv2.THRESH_BINARY_INV,
             15,  # Block size
-            3    # C constant
+            3,  # C constant
         )
 
         # Find contours
-        contours, _ = cv2.findContours(
-            thresh,
-            cv2.RETR_EXTERNAL,
-            cv2.CHAIN_APPROX_SIMPLE
-        )
+        contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         # If no contours found, fill entire bbox with opaque color
         if not contours:
@@ -82,8 +76,8 @@ class ImageMasker:
         logger.debug(f"Contour mask ({len(contours)} contours): ({x1}, {y1}) - ({x2}, {y2})")
         return image
 
-    def _validate_bbox(self, bbox: Tuple[int, int, int, int],
-                       shape: tuple) -> Tuple[int, int, int, int]:
+    def _validate_bbox(
+        self, bbox: Tuple[int, int, int, int], shape: tuple
+    ) -> Tuple[int, int, int, int]:
         """Validate bbox coordinates."""
         return validate_bbox(bbox, shape)
-

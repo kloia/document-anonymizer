@@ -41,22 +41,21 @@ class DocumentAnonymizer:
         self.config = self._load_config(config_path)
 
         # Store LLM settings (explicit params override env vars)
-        self.config['llm'] = {
-            'api_key': llm_api_key or os.getenv('LLM_API_KEY', ''),
-            'api_url': llm_api_url or os.getenv('LLM_API_URL', ''),
-            'model': llm_model or os.getenv('LLM_MODEL_VISION', 'gpt-4-vision-preview'),
+        self.config["llm"] = {
+            "api_key": llm_api_key or os.getenv("LLM_API_KEY", ""),
+            "api_url": llm_api_url or os.getenv("LLM_API_URL", ""),
+            "model": llm_model or os.getenv("LLM_MODEL_VISION", "gpt-4-vision-preview"),
         }
 
         # Store secret key (explicit param overrides env var)
         if secret_key:
-            self.config['anonymization']['secret_key'] = secret_key
+            self.config["anonymization"]["secret_key"] = secret_key
 
         # Create anonymization engine first (shared across components)
-        registry_path = self.config.get('anonymization', {}).get('registry_path')
-        anon_secret_key = self.config.get('anonymization', {}).get('secret_key')
+        registry_path = self.config.get("anonymization", {}).get("registry_path")
+        anon_secret_key = self.config.get("anonymization", {}).get("secret_key")
         self._anon_engine = create_anonymization_engine(
-            secret_key=anon_secret_key,
-            registry_path=registry_path
+            secret_key=anon_secret_key, registry_path=registry_path
         )
 
         # Initialize components
@@ -64,68 +63,68 @@ class DocumentAnonymizer:
         self.field_detector = FieldDetector(self.config)
         self.image_masker = ImageMasker(self.config)
         self.text_renderer = TextRenderer(
-            self.config,
-            anonymization_engine=self._anon_engine,
-            image_masker=self.image_masker
+            self.config, anonymization_engine=self._anon_engine, image_masker=self.image_masker
         )
         self.verifier = PostMaskingVerifier(self.config)
         self.report_generator = ReportGenerator(self.config)
 
         # Concurrency settings
-        self.max_concurrent_pages = int(os.getenv('MAX_CONCURRENT_PAGES', '8'))
-        self.max_concurrent_files = int(os.getenv('MAX_CONCURRENT_FILES', '4'))
-        self.streaming_threshold = int(os.getenv('STREAMING_THRESHOLD_PAGES', '20'))
+        self.max_concurrent_pages = int(os.getenv("MAX_CONCURRENT_PAGES", "8"))
+        self.max_concurrent_files = int(os.getenv("MAX_CONCURRENT_FILES", "4"))
+        self.streaming_threshold = int(os.getenv("STREAMING_THRESHOLD_PAGES", "20"))
 
         # State
         self._output_dir: Optional[Path] = None
 
         # Log initialization status
-        llm_configured = bool(self.config['llm']['api_key'])
-        logger.info(f"DocumentAnonymizer initialized (LLM: {'enabled' if llm_configured else 'disabled'})")
+        llm_configured = bool(self.config["llm"]["api_key"])
+        logger.info(
+            f"DocumentAnonymizer initialized (LLM: {'enabled' if llm_configured else 'disabled'})"
+        )
 
     def _load_config(self, config_path: Optional[str]) -> Dict:
         """Load configuration from YAML file."""
         default_config = {
-            'anonymization': {
-                'secret_key': None,
-                'registry_path': None,  # Set dynamically in _configure_output_paths
-                'persist_registry': True,
+            "anonymization": {
+                "secret_key": None,
+                "registry_path": None,  # Set dynamically in _configure_output_paths
+                "persist_registry": True,
             },
-            'ocr_settings': {
-                'dpi': 300,
-                'preprocessing': {
-                    'enabled': True,
-                    'use_ocr_preprocessor': True,
-                    'pipeline': 'full',
+            "ocr_settings": {
+                "dpi": 300,
+                "preprocessing": {
+                    "enabled": True,
+                    "use_ocr_preprocessor": True,
+                    "pipeline": "full",
                 },
             },
-            'detection_rules': {
-                'use_llm_classification': True,
-                'use_fallback_detection': True,
-                'min_confidence': 0.5,
+            "detection_rules": {
+                "use_llm_classification": True,
+                "use_fallback_detection": True,
+                "min_confidence": 0.5,
             },
-            'masking_strategy': {
-                'text_fields': {
-                    'background_color': [255, 255, 255],
-                    'text_color': [0, 0, 0],
-                    'padding': 5,
+            "masking_strategy": {
+                "text_fields": {
+                    "background_color": [255, 255, 255],
+                    "text_color": [0, 0, 0],
+                    "padding": 5,
                 },
             },
-            'verification': {
-                'enabled': True,
-                'strict_mode': False,
-                'check_original_text': True,
+            "verification": {
+                "enabled": True,
+                "strict_mode": False,
+                "check_original_text": True,
             },
-            'processing': {
-                'max_concurrent_pages': 8,
-                'max_concurrent_files': 4,
-                'streaming_threshold_pages': 20,
+            "processing": {
+                "max_concurrent_pages": 8,
+                "max_concurrent_files": 4,
+                "streaming_threshold_pages": 20,
             },
         }
 
         if config_path and Path(config_path).exists():
             try:
-                with open(config_path, 'r', encoding='utf-8') as f:
+                with open(config_path, "r", encoding="utf-8") as f:
                     user_config = yaml.safe_load(f)
                     if user_config:
                         self._deep_merge(default_config, user_config)
@@ -148,19 +147,19 @@ class DocumentAnonymizer:
         self._output_dir.mkdir(parents=True, exist_ok=True)
 
         # Logs directory (inside output)
-        logs_dir = self._output_dir / 'logs'
+        logs_dir = self._output_dir / "logs"
         logs_dir.mkdir(exist_ok=True)
 
         # Reports directory
-        reports_dir = logs_dir / 'reports'
+        reports_dir = logs_dir / "reports"
         reports_dir.mkdir(exist_ok=True)
 
         # Update report generator
         self.report_generator.set_output_dir(str(self._output_dir))
 
         # Token registry path (inside output, not logs)
-        registry_path = self._output_dir / 'token_registry.json'
-        self.config['anonymization']['registry_path'] = str(registry_path)
+        registry_path = self._output_dir / "token_registry.json"
+        self.config["anonymization"]["registry_path"] = str(registry_path)
 
         # Update engine registry path
         self._anon_engine.registry_path = str(registry_path)
@@ -171,7 +170,7 @@ class DocumentAnonymizer:
         output_dir: str,
         dry_run: bool = False,
         review_callback=None,
-        auto_approve_unreviewed: bool = True
+        auto_approve_unreviewed: bool = True,
     ) -> Dict:
         """
         Anonymize a single document.
@@ -205,7 +204,7 @@ class DocumentAnonymizer:
 
             # Get PDF info
             pdf_info = get_pdf_info(str(file_path))
-            total_pages = pdf_info['page_count']
+            total_pages = pdf_info["page_count"]
 
             # Convert PDF to images
             images = pdf_to_images(str(file_path))
@@ -225,15 +224,15 @@ class DocumentAnonymizer:
             # Detect document language using LLM and update processors
             if images:
                 lang_info = await self.field_detector.detect_document_language(images[0])
-                self.ocr_processor.update_languages(lang_info['languages'])
-                self._anon_engine.update_locale(lang_info['locale'])
+                self.ocr_processor.update_languages(lang_info["languages"])
+                self._anon_engine.update_locale(lang_info["locale"])
 
             for page_num, image in enumerate(images, start=1):
                 logger.debug(f"Processing page {page_num}/{total_pages} - Detection phase")
 
                 # Run OCR
                 ocr_result = await self.ocr_processor.run_ocr(image, page_num)
-                text_blocks = ocr_result.get('text_blocks', [])
+                text_blocks = ocr_result.get("text_blocks", [])
 
                 # Detect sensitive fields (returns tuple now)
                 auto_mask, needs_review = await self.field_detector.detect_sensitive_fields(
@@ -242,22 +241,24 @@ class DocumentAnonymizer:
 
                 all_auto_mask.extend(auto_mask)
                 all_needs_review.extend(needs_review)
-                page_ocr_data.append({
-                    'page_num': page_num,
-                    'image': image,
-                    'text_blocks': text_blocks,
-                })
+                page_ocr_data.append(
+                    {
+                        "page_num": page_num,
+                        "image": image,
+                        "text_blocks": text_blocks,
+                    }
+                )
 
             if dry_run:
                 processing_time = time.time() - start_time
                 return {
-                    'document': file_path.name,
-                    'status': 'dry_run',
-                    'total_pages': total_pages,
-                    'detected_fields': all_auto_mask + all_needs_review,
-                    'auto_mask_count': len(all_auto_mask),
-                    'needs_review_count': len(all_needs_review),
-                    'processing_time_seconds': round(processing_time, 2),
+                    "document": file_path.name,
+                    "status": "dry_run",
+                    "total_pages": total_pages,
+                    "detected_fields": all_auto_mask + all_needs_review,
+                    "auto_mask_count": len(all_auto_mask),
+                    "needs_review_count": len(all_needs_review),
+                    "processing_time_seconds": round(processing_time, 2),
                 }
 
             # Manual review callback for medium confidence fields
@@ -267,14 +268,18 @@ class DocumentAnonymizer:
                     # Use provided callback for manual review
                     try:
                         approved_review_fields = await review_callback(all_needs_review)
-                        logger.info(f"Manual review: {len(approved_review_fields)}/{len(all_needs_review)} approved")
+                        logger.info(
+                            f"Manual review: {len(approved_review_fields)}/{len(all_needs_review)} approved"
+                        )
                     except Exception as e:
                         logger.warning(f"Review callback error: {e}")
                         warnings.append(f"Manual review error: {str(e)}")
                 elif auto_approve_unreviewed:
                     # Auto-approve all medium confidence fields (safer default)
                     approved_review_fields = all_needs_review
-                    logger.info(f"Auto-approved {len(approved_review_fields)} medium confidence fields")
+                    logger.info(
+                        f"Auto-approved {len(approved_review_fields)} medium confidence fields"
+                    )
 
             # Combine fields to mask
             fields_to_mask = all_auto_mask + approved_review_fields
@@ -284,13 +289,13 @@ class DocumentAnonymizer:
             masked_images = []
 
             for page_data in page_ocr_data:
-                page_num = page_data['page_num']
-                image = page_data['image']
+                page_num = page_data["page_num"]
+                image = page_data["image"]
 
                 logger.debug(f"Processing page {page_num}/{total_pages} - Masking phase")
 
                 # Get fields for this page
-                page_fields = [f for f in fields_to_mask if f.get('page') == page_num]
+                page_fields = [f for f in fields_to_mask if f.get("page") == page_num]
 
                 # Mask and render
                 masked_image = image.copy()
@@ -298,12 +303,13 @@ class DocumentAnonymizer:
                 for field in page_fields:
                     try:
                         masked_image, dummy_text = self.text_renderer.mask_and_render(
-                            masked_image, field,
+                            masked_image,
+                            field,
                             hash_mapping=hash_mapping,
-                            document_id=file_path.name
+                            document_id=file_path.name,
                         )
 
-                        field['dummy_text'] = dummy_text
+                        field["dummy_text"] = dummy_text
                         all_fields.append(field)
 
                     except Exception as e:
@@ -327,7 +333,7 @@ class DocumentAnonymizer:
             images_to_pdf(masked_images, str(output_path))
 
             # Save token registry
-            if self.config['anonymization'].get('persist_registry', True):
+            if self.config["anonymization"].get("persist_registry", True):
                 self._anon_engine.save_registry()
 
             # Generate report
@@ -344,9 +350,9 @@ class DocumentAnonymizer:
             )
 
             # Add verification info
-            report['verification'] = {
-                'status': verification_result.status.value,
-                'confidence_score': verification_result.confidence_score,
+            report["verification"] = {
+                "status": verification_result.status.value,
+                "confidence_score": verification_result.confidence_score,
             }
 
             # Save report
@@ -380,7 +386,7 @@ class DocumentAnonymizer:
         folder_path: str,
         output_dir: str,
         review_callback=None,
-        auto_approve_unreviewed: bool = True
+        auto_approve_unreviewed: bool = True,
     ) -> List[Dict]:
         """
         Anonymize multiple documents in a folder.
@@ -418,7 +424,7 @@ class DocumentAnonymizer:
                     str(pdf_file),
                     output_dir,
                     review_callback=review_callback,
-                    auto_approve_unreviewed=auto_approve_unreviewed
+                    auto_approve_unreviewed=auto_approve_unreviewed,
                 )
 
         tasks = [process_with_semaphore(f) for f in pdf_files]
@@ -429,20 +435,19 @@ class DocumentAnonymizer:
         for i, result in enumerate(reports):
             if isinstance(result, Exception):
                 processed_reports.append(
-                    self.report_generator.generate_error_report(
-                        str(pdf_files[i]), str(result)
-                    )
+                    self.report_generator.generate_error_report(str(pdf_files[i]), str(result))
                 )
             else:
                 processed_reports.append(result)
 
         # Generate batch summary
         summary = self.report_generator.generate_batch_summary(processed_reports)
-        summary_path = Path(output_dir) / 'logs' / 'batch_summary.json'
+        summary_path = Path(output_dir) / "logs" / "batch_summary.json"
 
         import json
+
         summary_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(summary_path, 'w', encoding='utf-8') as f:
+        with open(summary_path, "w", encoding="utf-8") as f:
             json.dump(summary, f, indent=2, ensure_ascii=False)
 
         return processed_reports
@@ -458,7 +463,7 @@ class DocumentAnonymizer:
     def get_statistics(self) -> Dict:
         """Get processing statistics."""
         return {
-            'anonymization_engine': self._anon_engine.get_statistics(),
+            "anonymization_engine": self._anon_engine.get_statistics(),
         }
 
     async def close(self) -> None:

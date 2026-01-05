@@ -30,6 +30,7 @@ class TokenRecord:
     Stores metadata about the token without storing original value.
     GDPR/Privacy compliant: original value is NOT stored.
     """
+
     token: str
     namespace: str
     normalized_hash: str  # Hash of normalized original (not reversible)
@@ -47,6 +48,7 @@ class TokenRegistry:
     Maintains consistency across documents by mapping
     normalized text hashes to tokens.
     """
+
     tokens: Dict[str, TokenRecord] = field(default_factory=dict)
     created_at: str = field(default_factory=lambda: datetime.utcnow().isoformat())
     version: str = "1.0"
@@ -68,7 +70,7 @@ class TokenRegistry:
                     "confidence": v.confidence,
                 }
                 for k, v in self.tokens.items()
-            }
+            },
         }
 
     @classmethod
@@ -108,7 +110,7 @@ class AnonymizationEngine:
         registry_path: Optional[str] = None,
         persist_registry: bool = True,
         use_realistic_dummy: bool = True,
-        locale: str = 'tr_TR'
+        locale: str = "tr_TR",
     ):
         """
         Initialize anonymization engine.
@@ -122,8 +124,7 @@ class AnonymizationEngine:
         """
         # Get secret key from env if not provided
         self.secret_key = secret_key or os.getenv(
-            "ANONYMIZATION_SECRET_KEY",
-            "document_anonymizer_default_key_change_in_production"
+            "ANONYMIZATION_SECRET_KEY", "document_anonymizer_default_key_change_in_production"
         )
 
         # Registry for cross-document consistency
@@ -140,10 +141,11 @@ class AnonymizationEngine:
 
         # Dummy data generator for realistic anonymization
         self.use_realistic_dummy = use_realistic_dummy
-        self._dummy_generator = DummyDataGenerator(
-            secret_key=self.secret_key,
-            locale=locale
-        ) if use_realistic_dummy else None
+        self._dummy_generator = (
+            DummyDataGenerator(secret_key=self.secret_key, locale=locale)
+            if use_realistic_dummy
+            else None
+        )
 
         logger.debug(f"AnonymizationEngine initialized (realistic_dummy={use_realistic_dummy})")
 
@@ -153,7 +155,7 @@ class AnonymizationEngine:
         field_type: str,
         document_id: Optional[str] = None,
         context: Optional[str] = None,
-        confidence: float = 1.0
+        confidence: float = 1.0,
     ) -> str:
         """
         Anonymize text by generating deterministic replacement.
@@ -190,9 +192,7 @@ class AnonymizationEngine:
         if self.use_realistic_dummy and self._dummy_generator:
             # Use realistic dummy data
             replacement = self._dummy_generator.generate(
-                original_text=original_text,
-                field_type=field_type,
-                context=context
+                original_text=original_text, field_type=field_type, context=context
             )
         else:
             # Fall back to token-based anonymization
@@ -222,13 +222,9 @@ class AnonymizationEngine:
 
         return replacement
 
-    def _find_similar_cached_value(
-        self,
-        normalized: str,
-        field_type: str
-    ) -> Optional[str]:
+    def _find_similar_cached_value(self, normalized: str, field_type: str) -> Optional[str]:
         """Find similar cached value for OCR consistency across variations."""
-        if not hasattr(self, '_normalized_values'):
+        if not hasattr(self, "_normalized_values"):
             return None
 
         # For names and IDs, check if this is a substring of existing value
@@ -253,15 +249,15 @@ class AnonymizationEngine:
                     return stored_replacement
 
                 # Check word-level overlap for names
-                if field_type in ('person_name', 'company_name'):
+                if field_type in ("person_name", "company_name"):
                     overlap = self._calculate_word_overlap(normalized, stored_normalized)
                     if overlap >= 0.5:  # At least 50% word overlap
                         return stored_replacement
 
             # For numeric IDs, check if digits match
-            if field_type in ('national_id', 'tax_id', 'phone'):
-                norm_digits = re.sub(r'\D', '', normalized)
-                stored_digits = re.sub(r'\D', '', stored_normalized)
+            if field_type in ("national_id", "tax_id", "phone"):
+                norm_digits = re.sub(r"\D", "", normalized)
+                stored_digits = re.sub(r"\D", "", stored_normalized)
                 if norm_digits and stored_digits:
                     if norm_digits == stored_digits:
                         return stored_replacement
@@ -272,28 +268,23 @@ class AnonymizationEngine:
 
         return None
 
-    def _store_normalized_value(
-        self,
-        normalized: str,
-        replacement: str,
-        field_type: str
-    ) -> None:
+    def _store_normalized_value(self, normalized: str, replacement: str, field_type: str) -> None:
         """Store normalized value for similarity matching."""
-        if not hasattr(self, '_normalized_values'):
+        if not hasattr(self, "_normalized_values"):
             self._normalized_values: Dict[str, tuple] = {}
 
         self._normalized_values[normalized] = (replacement, field_type)
 
     def _is_incompatible_type(self, type1: str, type2: str) -> bool:
         """Check if two field types are incompatible for matching."""
-        name_types = {'person_name', 'company_name'}
-        id_types = {'national_id', 'tax_id', 'passport'}
-        contact_types = {'phone', 'email'}
+        name_types = {"person_name", "company_name"}
+        id_types = {"national_id", "tax_id", "passport"}
+        contact_types = {"phone", "email"}
 
         type1_category = None
         type2_category = None
 
-        for cat, types in [('name', name_types), ('id', id_types), ('contact', contact_types)]:
+        for cat, types in [("name", name_types), ("id", id_types), ("contact", contact_types)]:
             if type1 in types:
                 type1_category = cat
             if type2 in types:
@@ -351,12 +342,12 @@ class AnonymizationEngine:
 
         # License plates: remove all whitespace/dashes, uppercase
         if "plate" in field_type_lower or "license" in field_type_lower:
-            normalized = re.sub(r'[\s\-]+', '', normalized).upper()
+            normalized = re.sub(r"[\s\-]+", "", normalized).upper()
             return normalized.strip()
 
         # Phone numbers: keep only digits and + sign
         if "phone" in field_type_lower or "tel" in field_type_lower or "fax" in field_type_lower:
-            normalized = re.sub(r'[^\d+]', '', normalized)
+            normalized = re.sub(r"[^\d+]", "", normalized)
             return normalized
 
         # Email: lowercase, no extra normalization needed
@@ -364,8 +355,11 @@ class AnonymizationEngine:
             return normalized.lower().strip()
 
         # National IDs: remove all whitespace and dashes for matching
-        if any(x in field_type_lower for x in ['ssn', 'nino', 'insee', 'national_id', 'tax_id', 'id_number']):
-            normalized = re.sub(r'[\s\-.]', '', normalized).upper()
+        if any(
+            x in field_type_lower
+            for x in ["ssn", "nino", "insee", "national_id", "tax_id", "id_number"]
+        ):
+            normalized = re.sub(r"[\s\-.]", "", normalized).upper()
             return normalized
 
         # Default normalization for other types
@@ -377,8 +371,8 @@ class AnonymizationEngine:
 
         # Common OCR error corrections
         ocr_corrections = {
-            "#": "",   # OCR artifact
-            "_": "",   # OCR artifact
+            "#": "",  # OCR artifact
+            "_": "",  # OCR artifact
             "ı": "i",  # Turkish ı
             "İ": "i",  # Turkish İ
             "ğ": "g",  # Turkish ğ
@@ -446,11 +440,11 @@ class AnonymizationEngine:
         # Create HMAC with namespace for uniqueness
         message = f"{namespace.value}:{normalized_text}"
 
-        hash_value = hmac.new(
-            self.secret_key.encode("utf-8"),
-            message.encode("utf-8"),
-            hashlib.sha256
-        ).hexdigest()[:8].upper()
+        hash_value = (
+            hmac.new(self.secret_key.encode("utf-8"), message.encode("utf-8"), hashlib.sha256)
+            .hexdigest()[:8]
+            .upper()
+        )
 
         return f"{namespace.value}-{hash_value}"
 
@@ -519,8 +513,7 @@ class AnonymizationEngine:
 
 
 def create_anonymization_engine(
-    secret_key: Optional[str] = None,
-    registry_path: Optional[str] = None
+    secret_key: Optional[str] = None, registry_path: Optional[str] = None
 ) -> AnonymizationEngine:
     """
     Create a new anonymization engine instance.
@@ -532,10 +525,7 @@ def create_anonymization_engine(
     Returns:
         New AnonymizationEngine instance
     """
-    return AnonymizationEngine(
-        secret_key=secret_key,
-        registry_path=registry_path
-    )
+    return AnonymizationEngine(secret_key=secret_key, registry_path=registry_path)
 
 
 # Singleton instance
@@ -543,8 +533,7 @@ _engine_instance: Optional[AnonymizationEngine] = None
 
 
 def get_anonymization_engine(
-    secret_key: Optional[str] = None,
-    registry_path: Optional[str] = None
+    secret_key: Optional[str] = None, registry_path: Optional[str] = None
 ) -> AnonymizationEngine:
     """
     Get singleton anonymization engine instance.
@@ -559,7 +548,6 @@ def get_anonymization_engine(
     global _engine_instance
     if _engine_instance is None:
         _engine_instance = create_anonymization_engine(
-            secret_key=secret_key,
-            registry_path=registry_path
+            secret_key=secret_key, registry_path=registry_path
         )
     return _engine_instance

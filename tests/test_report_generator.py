@@ -346,8 +346,12 @@ class TestGenerateBatchSummary:
     def test_batch_summary_with_failures(self, generator):
         """Should include failed documents."""
         reports = [
-            {"status": "success", "total_pages": 5, "processing_time_seconds": 2.0,
-             "statistics": {"total_masked_fields": 10, "by_type": {}}},
+            {
+                "status": "success",
+                "total_pages": 5,
+                "processing_time_seconds": 2.0,
+                "statistics": {"total_masked_fields": 10, "by_type": {}},
+            },
             {"status": "failed", "document": "bad.pdf", "error": "OCR failed"},
         ]
 

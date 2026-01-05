@@ -115,7 +115,6 @@ class TestDummyDataGenerator:
         assert "Test Value:person_name" in generator._cache
 
 
-
 class TestNameGeneration:
     """Tests for name generation."""
 
@@ -333,7 +332,7 @@ class TestAnalyzePatternMixed:
         result = analyze_pattern("test@#$test")
         # @ is separator, # and $ are mixed
         types = [t for t, _ in result]
-        assert 'X' in types or 'S' in types  # @ counts as separator
+        assert "X" in types or "S" in types  # @ counts as separator
 
     def test_mixed_alphanumeric(self):
         """Should handle mixed patterns."""
@@ -381,7 +380,8 @@ class TestAddressGeneration:
         result = generator.generate("123 Main Street", "address")
         # Should contain a number
         import re
-        assert re.search(r'\d', result)
+
+        assert re.search(r"\d", result)
 
     def test_address_multiline(self, generator):
         """Should handle multi-line addresses."""
@@ -477,7 +477,7 @@ class TestGenerateFromPatternMixed:
 
     def test_mixed_segment_type(self):
         """Should handle X (mixed) segment type."""
-        pattern = [('X', 3)]
+        pattern = [("X", 3)]
         result = generate_from_pattern(pattern, "ab@", seed=42)
         assert len(result) == 3
 

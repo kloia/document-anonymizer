@@ -19,43 +19,43 @@ class TextRenderer:
     """Dummy text generator and renderer with font matching support."""
 
     FONT_PATHS = {
-        'normal': [
-            'config/fonts/Arial.ttf',
-            '/System/Library/Fonts/Helvetica.ttc',
-            '/System/Library/Fonts/Arial.ttf',
-            '/Library/Fonts/Arial.ttf',
-            '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
-            '/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf',
-            'C:/Windows/Fonts/arial.ttf',
+        "normal": [
+            "config/fonts/Arial.ttf",
+            "/System/Library/Fonts/Helvetica.ttc",
+            "/System/Library/Fonts/Arial.ttf",
+            "/Library/Fonts/Arial.ttf",
+            "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+            "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
+            "C:/Windows/Fonts/arial.ttf",
         ],
-        'bold': [
-            'config/fonts/Arial-Bold.ttf',
-            '/System/Library/Fonts/Helvetica.ttc',
-            '/Library/Fonts/Arial Bold.ttf',
-            '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf',
-            '/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf',
-            'C:/Windows/Fonts/arialbd.ttf',
-        ]
+        "bold": [
+            "config/fonts/Arial-Bold.ttf",
+            "/System/Library/Fonts/Helvetica.ttc",
+            "/Library/Fonts/Arial Bold.ttf",
+            "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+            "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
+            "C:/Windows/Fonts/arialbd.ttf",
+        ],
     }
 
     def __init__(
         self,
         config: Optional[Dict] = None,
         anonymization_engine: Optional[AnonymizationEngine] = None,
-        image_masker: Optional["ImageMasker"] = None
+        image_masker: Optional["ImageMasker"] = None,
     ):
         """Initialize text renderer."""
         self.config = config or {}
 
-        font_config = self.config.get('masking_strategy', {}).get('font', {})
-        self.default_font_path = font_config.get('default_path', 'config/fonts/Arial.ttf')
-        self.default_font_size = font_config.get('default_size', 20)
-        self.auto_scale = font_config.get('auto_scale', True)
+        font_config = self.config.get("masking_strategy", {}).get("font", {})
+        self.default_font_path = font_config.get("default_path", "config/fonts/Arial.ttf")
+        self.default_font_size = font_config.get("default_size", 20)
+        self.auto_scale = font_config.get("auto_scale", True)
 
-        text_config = self.config.get('masking_strategy', {}).get('text_fields', {})
-        self.default_text_color = tuple(text_config.get('text_color', [0, 0, 0]))
-        self.default_bg_color = tuple(text_config.get('background_color', [255, 255, 255]))
-        self.padding = text_config.get('padding', 5)
+        text_config = self.config.get("masking_strategy", {}).get("text_fields", {})
+        self.default_text_color = tuple(text_config.get("text_color", [0, 0, 0]))
+        self.default_bg_color = tuple(text_config.get("background_color", [255, 255, 255]))
+        self.padding = text_config.get("padding", 5)
 
         self._font_cache = {}
 
@@ -63,11 +63,10 @@ class TextRenderer:
         if anonymization_engine:
             self._anon_engine = anonymization_engine
         else:
-            registry_path = self.config.get('anonymization', {}).get('registry_path')
-            secret_key = self.config.get('anonymization', {}).get('secret_key')
+            registry_path = self.config.get("anonymization", {}).get("registry_path")
+            secret_key = self.config.get("anonymization", {}).get("secret_key")
             self._anon_engine = create_anonymization_engine(
-                secret_key=secret_key,
-                registry_path=registry_path
+                secret_key=secret_key, registry_path=registry_path
             )
 
         # Dependency injection for image masker
@@ -80,7 +79,7 @@ class TextRenderer:
         original_text: str,
         field_type: str,
         document_id: Optional[str] = None,
-        field_context: Optional[str] = None
+        field_context: Optional[str] = None,
     ) -> str:
         """
         Generate deterministic dummy data for original text.
@@ -101,7 +100,7 @@ class TextRenderer:
             original_text=original_text,
             field_type=field_type,
             document_id=document_id,
-            context=field_context
+            context=field_context,
         )
 
     def mask_and_render(
@@ -110,7 +109,7 @@ class TextRenderer:
         field: Dict,
         font_properties: Optional[Dict] = None,
         hash_mapping: Optional[Dict] = None,
-        document_id: Optional[str] = None
+        document_id: Optional[str] = None,
     ) -> Tuple[np.ndarray, str]:
         """
         Mask field area and render dummy text.
@@ -128,43 +127,41 @@ class TextRenderer:
         Returns:
             (Processed image, dummy text) tuple
         """
-        bbox = field.get('bbox')
-        field_type = field.get('field_type', '')
+        bbox = field.get("bbox")
+        field_type = field.get("field_type", "")
 
         if not bbox:
-            return image, ''
+            return image, ""
 
         if is_signature_or_stamp(field):
             masked = self._image_masker.mask_signature_stamp_contour(image.copy(), bbox)
-            return masked, ''
+            return masked, ""
 
         # Handle label preservation
-        label = field.get('label')  # e.g., "Phone: "
+        label = field.get("label")  # e.g., "Phone: "
         if label:
             # Anonymize only the sensitive value, preserve label
-            sensitive_value = field.get('original_text', '') or field.get('text', '')
+            sensitive_value = field.get("original_text", "") or field.get("text", "")
         else:
             # No label - anonymize entire text
-            sensitive_value = field.get('original_text', '') or field.get('text', '')
+            sensitive_value = field.get("original_text", "") or field.get("text", "")
 
         if font_properties is None:
-            font_properties = field.get('font_properties', {})
+            font_properties = field.get("font_properties", {})
 
-        bg_color = font_properties.get('surrounding_background', self.default_bg_color)
-        text_color = font_properties.get('text_color', self.default_text_color)
-        is_bold = font_properties.get('is_bold', False)
-        estimated_size = font_properties.get('estimated_size', None)
+        bg_color = font_properties.get("surrounding_background", self.default_bg_color)
+        text_color = font_properties.get("text_color", self.default_text_color)
+        is_bold = font_properties.get("is_bold", False)
+        estimated_size = font_properties.get("estimated_size", None)
 
         # Build field context for audit trail
-        page_num = field.get('page', 0)
-        detection_method = field.get('detection_method', 'unknown')
+        page_num = field.get("page", 0)
+        detection_method = field.get("detection_method", "unknown")
         field_context = f"page:{page_num}|type:{field_type}|method:{detection_method}"
 
         # Generate dummy for the sensitive value only
         dummy_value = self.generate_deterministic_dummy(
-            sensitive_value, field_type,
-            document_id=document_id,
-            field_context=field_context
+            sensitive_value, field_type, document_id=document_id, field_context=field_context
         )
 
         # Combine label + dummy_value for final text
@@ -196,7 +193,7 @@ class TextRenderer:
         image: np.ndarray,
         bbox: Tuple[int, int, int, int],
         bg_color: Tuple[int, int, int],
-        safe_padding: Optional[Tuple[int, int, int, int]] = None
+        safe_padding: Optional[Tuple[int, int, int, int]] = None,
     ) -> np.ndarray:
         """Mask area with detected background color."""
         x1, y1, x2, y2 = validate_bbox(bbox, image.shape)
@@ -223,7 +220,7 @@ class TextRenderer:
         bbox: Tuple[int, int, int, int],
         font_size: int,
         text_color: Tuple[int, int, int],
-        is_bold: bool = False
+        is_bold: bool = False,
     ) -> np.ndarray:
         """Render text with specific styling."""
         if not text or not text.strip():
@@ -253,8 +250,8 @@ class TextRenderer:
             else:
                 text_y = y1 + 2
 
-            if '\n' in text:
-                lines = text.split('\n')
+            if "\n" in text:
+                lines = text.split("\n")
                 line_height = font_size + 4
                 current_y = y1 + 3
 
@@ -273,19 +270,15 @@ class TextRenderer:
             logger.error(f"Text rendering error: {e}")
             return image
 
-    def _load_styled_font(
-        self,
-        size: int,
-        is_bold: bool = False
-    ) -> ImageFont.FreeTypeFont:
+    def _load_styled_font(self, size: int, is_bold: bool = False) -> ImageFont.FreeTypeFont:
         """Load font with appropriate style."""
-        style = 'bold' if is_bold else 'normal'
+        style = "bold" if is_bold else "normal"
         cache_key = (style, size)
 
         if cache_key in self._font_cache:
             return self._font_cache[cache_key]
 
-        font_paths = self.FONT_PATHS.get(style, self.FONT_PATHS['normal'])
+        font_paths = self.FONT_PATHS.get(style, self.FONT_PATHS["normal"])
 
         font = None
         for font_path in font_paths:
@@ -306,11 +299,7 @@ class TextRenderer:
         return font
 
     def _fit_text_to_bbox(
-        self,
-        text: str,
-        bbox: Tuple[int, int, int, int],
-        initial_size: int,
-        is_bold: bool = False
+        self, text: str, bbox: Tuple[int, int, int, int], initial_size: int, is_bold: bool = False
     ) -> int:
         """Adjust font size to fit text within bbox."""
         if not text or not text.strip():
@@ -323,7 +312,7 @@ class TextRenderer:
         if box_width <= 0 or box_height <= 0:
             return max(6, initial_size)
 
-        temp_img = Image.new('RGB', (100, 100))
+        temp_img = Image.new("RGB", (100, 100))
         draw = ImageDraw.Draw(temp_img)
 
         min_size = 6
@@ -351,9 +340,7 @@ class TextRenderer:
         return max(min_size, best_size)
 
     def estimate_font_size(
-        self,
-        bbox: Tuple[int, int, int, int],
-        original_text: Optional[str] = None
+        self, bbox: Tuple[int, int, int, int], original_text: Optional[str] = None
     ) -> int:
         """Estimate font size from bounding box."""
         x1, y1, x2, y2 = bbox
@@ -370,4 +357,3 @@ class TextRenderer:
             estimated = height_based
 
         return max(8, min(estimated, 60))
-
