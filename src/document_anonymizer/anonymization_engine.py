@@ -123,8 +123,13 @@ class AnonymizationEngine:
             locale: Locale for dummy data generation
         """
         # Get secret key from env if not provided
-        self.secret_key = secret_key or os.getenv(
-            "ANONYMIZATION_SECRET_KEY", "document_anonymizer_default_key_change_in_production"
+        self.secret_key: str = (
+            secret_key
+            or os.getenv(
+                "ANONYMIZATION_SECRET_KEY",
+                "document_anonymizer_default_key_change_in_production",
+            )
+            or "document_anonymizer_default_key"
         )
 
         # Registry for cross-document consistency
@@ -471,18 +476,18 @@ class AnonymizationEngine:
         """
         import json
 
-        save_path = path or self.registry_path
-        if not save_path:
+        resolved = path or self.registry_path
+        if not resolved:
             logger.warning("No registry path specified, skipping save")
             return
 
-        save_path = Path(save_path)
-        save_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path = Path(resolved)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
 
-        with open(save_path, "w", encoding="utf-8") as f:
+        with open(output_path, "w", encoding="utf-8") as f:
             json.dump(self.registry.to_dict(), f, indent=2, ensure_ascii=False)
 
-        logger.info(f"Token registry saved: {save_path} ({len(self.registry.tokens)} tokens)")
+        logger.info(f"Token registry saved: {output_path} ({len(self.registry.tokens)} tokens)")
 
     def _load_registry(self, path: str) -> None:
         """Load token registry from file."""

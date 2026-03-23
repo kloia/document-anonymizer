@@ -9,9 +9,9 @@ import logging
 import os
 import time
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 
-import yaml
+import yaml  # type: ignore[import-untyped]
 
 from .anonymization_engine import create_anonymization_engine
 from .field_detector import FieldDetector
@@ -44,7 +44,7 @@ class DocumentAnonymizer:
         self.config["llm"] = {
             "api_key": llm_api_key or os.getenv("LLM_API_KEY", ""),
             "api_url": llm_api_url or os.getenv("LLM_API_URL", ""),
-            "model": llm_model or os.getenv("LLM_MODEL_VISION", "gpt-4-vision-preview"),
+            "model": llm_model or os.getenv("LLM_MODEL_VISION", "gpt-4o"),
         }
 
         # Store secret key (explicit param overrides env var)
@@ -166,7 +166,7 @@ class DocumentAnonymizer:
 
     async def anonymize_document(
         self,
-        file_path: str,
+        file_path: Union[str, Path],
         output_dir: str,
         dry_run: bool = False,
         review_callback=None,
@@ -190,35 +190,33 @@ class DocumentAnonymizer:
             Processing report dictionary
         """
         start_time = time.time()
-        file_path = Path(file_path)
+        path = Path(file_path)
 
-        if not file_path.exists():
-            return self.report_generator.generate_error_report(
-                str(file_path), f"File not found: {file_path}"
-            )
+        if not path.exists():
+            return self.report_generator.generate_error_report(str(path), f"File not found: {path}")
 
         self._configure_output_paths(output_dir)
 
         try:
-            logger.info(f"Processing: {file_path.name}")
+            logger.info(f"Processing: {path.name}")
 
             # Get PDF info
-            pdf_info = get_pdf_info(str(file_path))
+            pdf_info = get_pdf_info(str(path))
             total_pages = pdf_info["page_count"]
 
             # Convert PDF to images
-            images = pdf_to_images(str(file_path))
+            images = pdf_to_images(str(path))
 
             if not images:
                 return self.report_generator.generate_error_report(
-                    str(file_path), "Failed to convert PDF to images"
+                    str(path), "Failed to convert PDF to images"
                 )
 
             # Process pages - Phase 1: Detection
             all_auto_mask = []
             all_needs_review = []
             page_ocr_data = []
-            hash_mapping = {}
+            hash_mapping: Dict[str, str] = {}
             warnings = []
 
             # Detect document language using LLM and update processors
@@ -252,7 +250,7 @@ class DocumentAnonymizer:
             if dry_run:
                 processing_time = time.time() - start_time
                 return {
-                    "document": file_path.name,
+                    "document": path.name,
                     "status": "dry_run",
                     "total_pages": total_pages,
                     "detected_fields": all_auto_mask + all_needs_review,
@@ -306,7 +304,7 @@ class DocumentAnonymizer:
                             masked_image,
                             field,
                             hash_mapping=hash_mapping,
-                            document_id=file_path.name,
+                            document_id=path.name,
                         )
 
                         field["dummy_text"] = dummy_text
@@ -327,8 +325,8 @@ class DocumentAnonymizer:
                 warnings.append("Verification failed: possible data leakage detected")
 
             # Save masked PDF
-            output_filename = f"{file_path.stem}_anonymized.pdf"
-            output_path = self._output_dir / output_filename
+            output_filename = f"{path.stem}_anonymized.pdf"
+            output_path = self._output_dir / output_filename  # type: ignore[operator]
 
             images_to_pdf(masked_images, str(output_path))
 
@@ -340,7 +338,7 @@ class DocumentAnonymizer:
             processing_time = time.time() - start_time
 
             report = self.report_generator.generate_report(
-                input_path=str(file_path),
+                input_path=str(path),
                 output_path=str(output_path),
                 detected_fields=all_fields,
                 hash_mapping=hash_mapping,
@@ -356,18 +354,16 @@ class DocumentAnonymizer:
             }
 
             # Save report
-            self.report_generator.save_report(report, f"{file_path.stem}_report.json")
+            self.report_generator.save_report(report, f"{path.stem}_report.json")
 
-            logger.info(f"Completed: {file_path.name} ({len(all_fields)} fields masked)")
+            logger.info(f"Completed: {path.name} ({len(all_fields)} fields masked)")
 
             return report
 
         except Exception as e:
             logger.exception(f"Document processing error: {e}")
             processing_time = time.time() - start_time
-            return self.report_generator.generate_error_report(
-                str(file_path), str(e), processing_time
-            )
+            return self.report_generator.generate_error_report(str(path), str(e), processing_time)
 
     async def analyze_document(self, file_path: str) -> Dict:
         """
@@ -383,7 +379,7 @@ class DocumentAnonymizer:
 
     async def anonymize_batch(
         self,
-        folder_path: str,
+        folder_path: Union[str, Path],
         output_dir: str,
         review_callback=None,
         auto_approve_unreviewed: bool = True,
@@ -400,17 +396,17 @@ class DocumentAnonymizer:
         Returns:
             List of processing reports
         """
-        folder_path = Path(folder_path)
+        folder = Path(folder_path)
 
-        if not folder_path.is_dir():
-            logger.error(f"Not a directory: {folder_path}")
+        if not folder.is_dir():
+            logger.error(f"Not a directory: {folder}")
             return []
 
         # Find PDF files
-        pdf_files = list(folder_path.glob("*.pdf"))
+        pdf_files = list(folder.glob("*.pdf"))
 
         if not pdf_files:
-            logger.warning(f"No PDF files found in: {folder_path}")
+            logger.warning(f"No PDF files found in: {folder}")
             return []
 
         logger.info(f"Found {len(pdf_files)} PDF files")
@@ -438,7 +434,7 @@ class DocumentAnonymizer:
                     self.report_generator.generate_error_report(str(pdf_files[i]), str(result))
                 )
             else:
-                processed_reports.append(result)
+                processed_reports.append(result)  # type: ignore[arg-type]
 
         # Generate batch summary
         summary = self.report_generator.generate_batch_summary(processed_reports)

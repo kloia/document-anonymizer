@@ -57,7 +57,7 @@ class TextRenderer:
         self.default_bg_color = tuple(text_config.get("background_color", [255, 255, 255]))
         self.padding = text_config.get("padding", 5)
 
-        self._font_cache = {}
+        self._font_cache: Dict = {}
 
         # Dependency injection for anonymization engine
         if anonymization_engine:
@@ -293,10 +293,10 @@ class TextRenderer:
             try:
                 font = ImageFont.truetype(self.default_font_path, size)
             except Exception:
-                font = ImageFont.load_default()
+                font = ImageFont.load_default()  # type: ignore[assignment]
 
         self._font_cache[cache_key] = font
-        return font
+        return font  # type: ignore[return-value]
 
     def _fit_text_to_bbox(
         self, text: str, bbox: Tuple[int, int, int, int], initial_size: int, is_bold: bool = False

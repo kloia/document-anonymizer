@@ -41,9 +41,7 @@ class LLMDetector:
         # This allows both programmatic configuration and environment variables
         self.api_url = llm_config.get("api_url") or os.getenv("LLM_API_URL", "")
         self.api_key = llm_config.get("api_key") or os.getenv("LLM_API_KEY", "")
-        self.model = llm_config.get("model") or os.getenv(
-            "LLM_MODEL_VISION", "gpt-4o"
-        )
+        self.model = llm_config.get("model") or os.getenv("LLM_MODEL_VISION", "gpt-4o")
 
         # Retry settings
         self.max_retries = llm_config.get("max_retries", 3)
@@ -79,7 +77,7 @@ class LLMDetector:
     def _encode_image(self, image: np.ndarray) -> str:
         """Encode image to base64."""
         _, buffer = cv2.imencode(".jpg", image, [cv2.IMWRITE_JPEG_QUALITY, 85])
-        return base64.b64encode(buffer).decode("utf-8")
+        return base64.b64encode(buffer).decode("utf-8")  # type: ignore[arg-type]
 
     async def detect_document_language(self, image: np.ndarray) -> Dict:
         """Detect document language. Returns {'languages': [...], 'locale': '...'}."""
@@ -136,7 +134,7 @@ Return only the JSON object, nothing else."""
 
     async def detect_all(self, image: np.ndarray, ocr_results: Optional[List[Dict]] = None) -> Dict:
         """Unified detection of text and visual sensitive elements."""
-        empty_result = {"text_detections": [], "visual_detections": []}
+        empty_result: Dict[str, List] = {"text_detections": [], "visual_detections": []}
 
         if not self.api_key:
             logger.warning("No LLM API key configured")
@@ -182,7 +180,7 @@ Return only the JSON object, nothing else."""
         import json
         import re
 
-        result = {"text_detections": [], "visual_detections": []}
+        result: Dict[str, List] = {"text_detections": [], "visual_detections": []}
 
         try:
             # Extract JSON object

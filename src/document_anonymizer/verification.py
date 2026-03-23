@@ -224,7 +224,7 @@ class PostMaskingVerifier:
 
     def generate_verification_report(self, result: VerificationResult, document_name: str) -> Dict:
         """Generate a detailed verification report."""
-        report = {
+        report: Dict = {
             "document": document_name,
             "verification_status": result.status.value,
             "confidence_score": round(result.confidence_score, 3),

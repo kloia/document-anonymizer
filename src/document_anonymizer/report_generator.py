@@ -62,8 +62,8 @@ class ReportGenerator:
         Returns:
             Report dictionary
         """
-        input_path = Path(input_path)
-        output_path = Path(output_path)
+        in_path = Path(input_path)
+        out_path = Path(output_path)
 
         masked_fields = []
         for idx, field in enumerate(detected_fields, start=1):
@@ -105,11 +105,11 @@ class ReportGenerator:
         statistics = self._calculate_statistics(detected_fields)
 
         report = {
-            "document": input_path.name,
+            "document": in_path.name,
             "processed_at": datetime.utcnow().isoformat() + "Z",
             "status": "success",
-            "input_path": str(input_path),
-            "output_path": str(output_path),
+            "input_path": str(in_path),
+            "output_path": str(out_path),
             "total_pages": total_pages,
             "processing_time_seconds": round(processing_time, 2),
             "masked_fields": masked_fields,
@@ -118,8 +118,8 @@ class ReportGenerator:
             "quality_checks": {
                 "original_text_still_readable": False,
                 "layout_preserved": True,
-                "file_size_mb": round(output_path.stat().st_size / (1024 * 1024), 2)
-                if output_path.exists()
+                "file_size_mb": round(out_path.stat().st_size / (1024 * 1024), 2)
+                if out_path.exists()
                 else 0,
             },
         }
@@ -141,10 +141,10 @@ class ReportGenerator:
 
     def _calculate_statistics(self, detected_fields: List[Dict]) -> Dict:
         """Calculate processing statistics."""
-        by_type = defaultdict(int)
-        by_page = defaultdict(int)
-        by_regulation = defaultdict(int)
-        by_risk_level = defaultdict(int)
+        by_type: Dict[str, int] = defaultdict(int)
+        by_page: Dict[str, int] = defaultdict(int)
+        by_regulation: Dict[str, int] = defaultdict(int)
+        by_risk_level: Dict[str, int] = defaultdict(int)
 
         for field in detected_fields:
             field_type = field.get("field_type", "unknown")
@@ -200,7 +200,7 @@ class ReportGenerator:
         total_pages = sum(r.get("total_pages", 0) for r in successful)
         total_time = sum(r.get("processing_time_seconds", 0) for r in successful)
 
-        type_totals = defaultdict(int)
+        type_totals: Dict[str, int] = defaultdict(int)
         for report in successful:
             by_type = report.get("statistics", {}).get("by_type", {})
             for field_type, count in by_type.items():
@@ -233,13 +233,13 @@ class ReportGenerator:
         self, input_path: str, error: str, processing_time: float = 0
     ) -> Dict:
         """Generate report for error case."""
-        input_path = Path(input_path)
+        path = Path(input_path)
 
         return {
-            "document": input_path.name,
+            "document": path.name,
             "processed_at": datetime.utcnow().isoformat() + "Z",
             "status": "failed",
-            "input_path": str(input_path),
+            "input_path": str(path),
             "error": error,
             "processing_time_seconds": round(processing_time, 2),
         }
