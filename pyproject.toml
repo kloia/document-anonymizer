@@ -10,10 +10,10 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}
 authors = [
-    {name = "kloia", email = "info@kloia.com"}
+    {name = "kloia", email = "ping@kloia.com"}
 ]
 maintainers = [
-    {name = "kloia", email = "info@kloia.com"}
+    {name = "kloia", email = "ping@kloia.com"}
 ]
 keywords = ["anonymization", "document", "pdf", "masking", "gdpr", "privacy", "ocr", "pii"]
 classifiers = [

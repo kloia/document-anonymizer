@@ -42,7 +42,7 @@ class LLMDetector:
         self.api_url = llm_config.get("api_url") or os.getenv("LLM_API_URL", "")
         self.api_key = llm_config.get("api_key") or os.getenv("LLM_API_KEY", "")
         self.model = llm_config.get("model") or os.getenv(
-            "LLM_MODEL_VISION", "gpt-4-vision-preview"
+            "LLM_MODEL_VISION", "gpt-4o"
         )
 
         # Retry settings

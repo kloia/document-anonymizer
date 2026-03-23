@@ -1,7 +1,7 @@
 # Document Anonymizer
 
-[![CI](https://github.com/kloia/document-anonymizer/actions/workflows/ci.yml/badge.svg)](https://github.com/kloia/document-anonymizer/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/kloia/document-anonymizer/branch/main/graph/badge.svg)](https://codecov.io/gh/kloia/document-anonymizer)
+[![CI](https://github.com/kloia/document-anonymizer/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/kloia/document-anonymizer/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/kloia/document-anonymizer/branch/master/graph/badge.svg)](https://codecov.io/gh/kloia/document-anonymizer)
 [![PyPI version](https://badge.fury.io/py/document-anonymizer.svg)](https://badge.fury.io/py/document-anonymizer)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -196,7 +196,7 @@ async def main():
     anonymizer = DocumentAnonymizer(
         llm_api_key="sk-your-api-key",
         llm_api_url="https://api.openai.com/v1",
-        llm_model="gpt-4-vision-preview",
+        llm_model="gpt-4o",
         secret_key="your-secret-key"
     )
 
@@ -227,7 +227,7 @@ Configuration priority (highest to lowest):
 |----------|----------|---------|-------------|
 | `LLM_API_KEY` | No | - | Vision LLM API key |
 | `LLM_API_URL` | No | - | Vision LLM endpoint URL |
-| `LLM_MODEL_VISION` | No | gpt-4-vision-preview | Model identifier |
+| `LLM_MODEL_VISION` | No | gpt-4o | Model identifier |
 | `ANONYMIZATION_SECRET_KEY` | No* | (default key) | HMAC key for tokenization |
 | `MAX_CONCURRENT_PAGES` | No | 8 | Page processing concurrency |
 
