@@ -295,7 +295,8 @@ Return only the JSON object, nothing else."""
                 return result["choices"][0]["message"]["content"]
 
             except httpx.HTTPStatusError as e:
-                logger.warning(f"LLM API error (attempt {attempt + 1}): {e}")
+                body = e.response.text[:500] if e.response else ""
+                logger.warning(f"LLM API error (attempt {attempt + 1}): {e} | body: {body}")
                 if attempt < self.max_retries - 1:
                     await asyncio.sleep(self.retry_delay * (attempt + 1))
                 else:

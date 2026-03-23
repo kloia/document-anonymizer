@@ -261,7 +261,7 @@ Replacements match the original format structure:
 
 | Type | Original | Replacement |
 |------|----------|-------------|
-| License Plate | `34 KLY 482` | `50 ZVP 897` |
+| License Plate | `34 ABC 123` | `50 ZVP 897` |
 | Phone | `+90 532 123 4567` | `+41 405 854 8371` |
 | Email | `john@example.com` | `alex@sample.org` |
 | Company | `Acme Ltd` | `Delta Ltd` |
@@ -301,9 +301,10 @@ Privacy-compliant format - original values are NOT stored:
 ### Detection Limitations
 
 1. **Visual elements require LLM** - Signatures and stamps are only detected when Vision LLM is configured
-2. **Address lines processed independently** - Multi-line addresses are detected as separate blocks
-3. **Tables processed as text** - No cell-level detection; tabular data treated as regular text
-4. **OCR accuracy varies** - Low-quality scans may produce incomplete text extraction
+2. **Visual element detection accuracy varies** - Signature and stamp detection relies entirely on the LLM's visual understanding. Accuracy depends on the model used, document quality, and scan resolution. Human review is recommended for critical use cases.
+3. **Address lines processed independently** - Multi-line addresses are detected as separate blocks
+4. **Tables processed as text** - No cell-level detection; tabular data treated as regular text
+5. **OCR accuracy varies** - Low-quality scans may produce incomplete text extraction
 
 ### Security Disclaimer
 

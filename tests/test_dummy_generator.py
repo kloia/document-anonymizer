@@ -28,7 +28,7 @@ class TestAnalyzePattern:
 
     def test_license_plate_format(self):
         """Turkish license plate format should be correctly parsed."""
-        result = analyze_pattern("34 KLY 482")
+        result = analyze_pattern("34 ABC 123")
         assert result == [("D", 2), ("S", 1), ("L", 3), ("S", 1), ("D", 3)]
 
     def test_phone_format(self):
@@ -55,7 +55,7 @@ class TestGenerateFromPattern:
 
     def test_preserves_length(self):
         """Generated text should match original length."""
-        original = "34 KLY 482"
+        original = "34 ABC 123"
         pattern = analyze_pattern(original)
         result = generate_from_pattern(pattern, original, seed=12345)
         assert len(result) == len(original)
@@ -228,7 +228,7 @@ class TestLicensePlateGeneration:
 
     def test_turkish_format(self, generator):
         """Turkish plate format should be preserved."""
-        original = "34 KLY 482"
+        original = "34 ABC 123"
         result = generator.generate(original, "license_plate")
         # Should have same structure: DD LLL DDD
         pattern = analyze_pattern(result)
