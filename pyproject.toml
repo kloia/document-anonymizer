@@ -51,7 +51,7 @@ dev = [
     "pytest-asyncio>=0.21",
     "ruff>=0.5",
     "mypy>=1.10",
-    "pre-commit>=3.0",
+    "pre-commit>=4.5.1",
     "types-PyYAML>=6.0",
     "types-Pillow>=10.0",
 ]
