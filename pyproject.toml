@@ -46,7 +46,7 @@ preprocessing = [
     "ocr-preprocessor @ git+https://github.com/kloia/ocr-preprocessor.git@v0.1.0",
 ]
 dev = [
-    "pytest>=7.0",
+    "pytest>=9.0.3",
     "pytest-cov>=4.0",
     "pytest-asyncio>=0.21",
     "ruff>=0.5",
